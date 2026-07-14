@@ -1,19 +1,13 @@
-// Стартовый экран твоего проекта — пока он простой и пустой.
-// Когда понадобятся вход и база данных, готовые примеры уже лежат рядом:
-//   src/components/Auth.tsx      — вход / регистрация
-//   src/components/Entries.tsx   — чтение и запись в базу
-// Просто попроси Codex подключить их на экран.
+import { useState } from 'react';
+import Football3D from './components/Football3D';
+import MainMenu from './components/MainMenu';
+import './menu.css';
 
 export default function App() {
-  return (
-    <main className="container">
-      <section className="hello">
-        <h1>Привет! 🚀</h1>
-        <p>Это твой проект. Пока тут пусто — самое интересное впереди.</p>
-        <p className="hello__hint">
-          Открой Codex и опиши свою идею — этот экран станет твоим приложением.
-        </p>
-      </section>
-    </main>
-  );
+  const [screen, setScreen] = useState<'menu' | 'match' | 'penalty' | 'career' | 'settings'>('menu');
+  const [player, setPlayer] = useState('Rayan');
+  const [tournament, setTournament] = useState('Быстрый матч');
+  if (screen === 'match') return <Football3D onExit={() => setScreen('menu')} tournament={tournament} />;
+  if (screen === 'penalty') return <Football3D onExit={() => setScreen('menu')} tournament="Режим пенальти · 3D" />;
+  return <MainMenu screen={screen} player={player} onStart={(mode) => { setTournament(mode); setScreen('match'); }} onScreen={setScreen} onPlayer={setPlayer} />;
 }
