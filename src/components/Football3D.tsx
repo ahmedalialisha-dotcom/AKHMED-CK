@@ -1,5 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useFootballScene } from "../hooks/useFootballScene";
+import { usePenaltyShootout } from "../hooks/usePenaltyShootout";
 import "../football3d.css";
 
 type Props = { onExit: () => void; tournament: string; penalty?: boolean };
@@ -12,6 +13,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
   const [attempts, setAttempts] = useState(0);
   const [power, setPower] = useState(0);
   const [stamina, setStamina] = useState(100);
+  const shootout = usePenaltyShootout();
   const onGoal = useCallback(() => {
     setGoals((current) => current + 1);
     setMessage("ГОООЛ! Нажми R и повтори момент ещё раз.");
@@ -24,13 +26,22 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
     () => setMessage("Защитник отобрал мяч! Нажми R и попробуй обойти его."),
     [],
   );
-  const onAttempt = useCallback(() => { setAttempts((value) => Math.min(5, value + 1)); }, []);
+  const onAttempt = useCallback((scored: boolean) => {
+    if (penalty) shootout.recordPlayerShot(scored);
+    else setAttempts((value) => value + 1);
+  }, [penalty, shootout.recordPlayerShot]);
   const sceneEvents = useMemo(
     () => ({ onGoal, onMiss, onTackle, onAttempt, onStats: setPower, onStamina: setStamina }),
     [onGoal, onMiss, onTackle, onAttempt],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty);
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey);
+
+  const shownMessage = penalty ? shootout.message : message;
+  const shownGoals = penalty ? shootout.playerGoals : goals;
+  const attemptLabel = shootout.playerAttempts < 5
+    ? `${shootout.playerAttempts + 1}/5`
+    : `доп. ${shootout.playerAttempts - 4}`;
 
   return (
     <main className="three-game">
@@ -40,13 +51,13 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
           <h1>{penalty ? 'Пенальти' : 'Повтори гол'}</h1>
         </div>
         <div className="goal-counter">
-          <span>СЧЁТ {goals} · ПОПЫТКА {Math.min(attempts + 1, 5)}/5</span>
-          <strong>{goals >= 3 ? '🏆' : goals}</strong>
+          <span>{penalty ? `ВЫ ${shootout.playerGoals}:${shootout.opponentGoals} СОПЕРНИК · ${shootout.turn === "finished" ? "МАТЧ ОКОНЧЕН" : `ПОПЫТКА ${attemptLabel}`}` : `СЧЁТ ${goals} · ПОПЫТКА ${attempts + 1}`}</span>
+          <strong>{shootout.turn === "finished" && shootout.playerGoals > shootout.opponentGoals ? '🏆' : shownGoals}</strong>
         </div>
       </header>
       <section className="three-game__brief">
         <span>ВЕЧЕРНИЙ СТАДИОН · КАМЕРА ОТ ТРЕТЬЕГО ЛИЦА</span>
-        <p>{message}</p>
+        <p>{shownMessage}</p>
       </section>
       <div
         ref={mountRef}
