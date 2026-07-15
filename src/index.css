@@ -69,6 +69,7 @@ button.ghost {
   font-weight: 500;
 }
 button.small { padding: 6px 10px; font-size: 14px; }
+.google-button { background: #fff; border: 1px solid #d4d8dc; color: #27405b; }
 
 .message { margin-top: 12px; color: var(--clay); font-size: 14px; }
 .hello { color: var(--soft); margin-bottom: 8px; }

@@ -2,8 +2,8 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useFootballScene } from "../hooks/useFootballScene";
 import "../football3d.css";
 
-type Props = { onExit: () => void; tournament: string };
-export default function Football3D({ onExit, tournament }: Props) {
+type Props = { onExit: () => void; tournament: string; penalty?: boolean };
+export default function Football3D({ onExit, tournament, penalty = false }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState(
     "Веди мяч, не подпускай защитников и пробей мимо вратаря.",
@@ -30,14 +30,14 @@ export default function Football3D({ onExit, tournament }: Props) {
     [onGoal, onMiss, onTackle, onAttempt],
   );
 
-  useFootballScene(mountRef, sceneEvents);
+  useFootballScene(mountRef, sceneEvents, penalty);
 
   return (
     <main className="three-game">
       <header className="three-game__header">
         <div>
           <p>{tournament} · FOOTBALL MOMENTS 3D</p>
-          <h1>Повтори гол</h1>
+          <h1>{penalty ? 'Пенальти' : 'Повтори гол'}</h1>
         </div>
         <div className="goal-counter">
           <span>СЧЁТ {goals} · ПОПЫТКА {Math.min(attempts + 1, 5)}/5</span>
@@ -52,14 +52,13 @@ export default function Football3D({ onExit, tournament }: Props) {
         ref={mountRef}
         className="three-game__canvas"
         aria-label="3D футбольное поле"
-      ><span className="shot-aim" aria-label="Прицел удара" /></div>
+      />
       <div className="match-hud"><div><span>СИЛА УДАРА</span><i><b style={{ width: `${power}%` }} /></i></div><div><span>ВЫНОСЛИВОСТЬ</span><i className="stamina"><b style={{ width: `${stamina}%` }} /></i></div></div>
+      {penalty && <div className="penalty-timing"><span>СЛИШКОМ СЛАБО</span><b>50 / 50</b><strong>ТОЧНО</strong></div>}
       <section className="how-to">
         <h2>Управление</h2>
         <div className="how-to__keys">
-          <p>
-            <kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад
-          </p>
+          <p>{penalty ? <><kbd>A</kbd> <kbd>D</kbd> выбрать угол · удерживай <kbd>Space</kbd> и отпусти в зелёной зоне</> : <><kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад</>}</p>
           <p>
             <kbd>A</kbd> <kbd>D</kbd> поворачивать игрока
           </p>

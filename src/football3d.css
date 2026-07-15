@@ -127,3 +127,4 @@ kbd {
   }
 }
 .celebration-menu{background:#164c9cdd;border:1px solid #8ab7ff;border-radius:16px;color:#fff;left:50%;padding:18px;position:fixed;text-align:center;top:50%;transform:translate(-50%,-50%);z-index:20}.celebration-menu div{display:flex;gap:8px}.celebration-menu button{background:#ffffffdd;color:#12366c}
+.penalty-timing{display:flex;margin:14px auto;max-width:520px}.penalty-timing span,.penalty-timing b,.penalty-timing strong{color:#fff;flex:1;font-size:11px;padding:9px;text-align:center}.penalty-timing span{background:#c64b45}.penalty-timing b{background:#d2a743}.penalty-timing strong{background:#3e9a5a}

@@ -22,6 +22,23 @@ const createNumber = (value: string) => {
   return sprite;
 };
 
+const createLabel = (value: string, y: number, size: number) => {
+  const canvas = document.createElement("canvas");
+  canvas.width = 256;
+  canvas.height = 64;
+  const drawing = canvas.getContext("2d");
+  if (drawing) {
+    drawing.fillStyle = "#167357";
+    drawing.font = "bold 30px Arial";
+    drawing.textAlign = "center";
+    drawing.fillText(value, 128, 42);
+  }
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
+  sprite.position.set(0, y, .54);
+  sprite.scale.set(size, size / 4, 1);
+  return sprite;
+};
+
 export const createFootballer = (
   kind: "star" | "defender" | "keeper",
   number?: string,
@@ -29,7 +46,7 @@ export const createFootballer = (
   const player = new THREE.Group();
   const colors =
     kind === "star"
-      ? ["#101d48", "#d62845"]
+      ? ["#f4d33b", "#168b64"]
       : kind === "keeper"
         ? ["#f2b632", "#1d2532"]
         : ["#e9ece8", "#304070"];
@@ -44,7 +61,7 @@ export const createFootballer = (
   const skin = new THREE.MeshStandardMaterial({
     color: kind === "star" ? "#a65f42" : "#8c543d",
   });
-  const shorts = new THREE.MeshStandardMaterial({ color: "#10172e" });
+  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#244fa4" : "#10172e" });
   const boot = new THREE.MeshStandardMaterial({ color: "#111218" });
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.43, 0.78, 5, 10),
@@ -60,7 +77,7 @@ export const createFootballer = (
   head.position.y = 2.25;
   const hair = new THREE.Mesh(
     new THREE.SphereGeometry(0.32, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-    new THREE.MeshStandardMaterial({ color: "#161515" }),
+    new THREE.MeshStandardMaterial({ color: kind === "star" ? "#d8d2bc" : "#161515" }),
   );
   hair.position.y = 2.39;
   player.add(body, chestStripe, head, hair);
@@ -80,7 +97,10 @@ export const createFootballer = (
     shoe.position.set(side * 0.22, 0.12, -0.1);
     player.add(arm, leg, shoe);
   });
-  if (number) player.add(createNumber(number));
+  if (number) {
+    player.add(createNumber(number));
+    if (kind === "star") player.add(createLabel("NEYMAR JR", 1.82, 1.2));
+  }
   player.traverse((item) => {
     if (item instanceof THREE.Mesh) {
       item.castShadow = true;
@@ -146,8 +166,9 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
   );
   scene.add(circle, new THREE.HemisphereLight("#7ba5cf", "#0c1f18", 1.4));
-  scene.add(new THREE.AmbientLight("#8eb7df", 1.1));
+  scene.add(new THREE.AmbientLight("#8eb7df", 2.1));
   const moonlight = new THREE.DirectionalLight("#c6e1ff", 2.2);
+  moonlight.intensity = 4;
   moonlight.position.set(0, 18, 4);
   scene.add(moonlight);
   addGoal(scene);
@@ -158,7 +179,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
   for (let part = 0; part < 8; part += 1) {
     const angle = Math.PI * .15 + (part / 7) * Math.PI * .5;
     const stand = new THREE.Mesh(new THREE.BoxGeometry(10, 7, 8), standMaterial);
-    stand.position.set(Math.cos(angle) * 27, 3.2, Math.sin(angle) * 27 - 4);
+    stand.position.set(Math.cos(angle) * 27, 3.2, -Math.abs(Math.sin(angle) * 27) - 8);
     stand.rotation.y = -angle;
     scene.add(stand);
   }
@@ -176,7 +197,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
         fan.position.set(
           side * (12 + row * 0.65),
           1 + row * 0.72,
-          -22 + column * 1.6,
+          -22 + column * .7,
         );
         fan.userData.fanBaseY = fan.position.y;
         fan.userData.fanPhase = (row * 7 + column * 3 + side) * .45;
@@ -193,10 +214,10 @@ export const addEveningStadium = (scene: THREE.Scene) => {
       new THREE.MeshStandardMaterial({ color: "#52606f" }),
     );
     pole.position.set(x, 5.5, z);
-    const lamp = new THREE.PointLight("#dcefff", 85, 38, 2);
+    const lamp = new THREE.PointLight("#dcefff", 140, 42, 2);
     lamp.position.set(x, 10.5, z);
     scene.add(pole, lamp);
-    const spotlight = new THREE.SpotLight("#e8f4ff", 850, 45, Math.PI / 6, 0.45, 1.5);
+    const spotlight = new THREE.SpotLight("#e8f4ff", 1400, 48, Math.PI / 6, 0.45, 1.5);
     spotlight.position.copy(lamp.position);
     spotlight.target.position.set(0, 0, 0);
     scene.add(spotlight, spotlight.target);

@@ -15,6 +15,7 @@ type SceneEvents = {
 export function useFootballScene(
   mountRef: React.RefObject<HTMLDivElement>,
   events: SceneEvents,
+  penalty = false,
 ) {
   useEffect(() => {
     const mount = mountRef.current;
@@ -27,16 +28,18 @@ export function useFootballScene(
     renderer.shadowMap.enabled = true;
     mount.appendChild(renderer.domElement);
     const player = createFootballer("star", "10");
-    player.position.set(0, 0.1, 14);
+    player.position.set(0, 0.1, penalty ? -3 : 14);
     scene.add(player);
     const teammates = [createFootballer("star", "7"), createFootballer("star", "11")];
-    teammates[0].position.set(-7, 0.1, 7);
-    teammates[1].position.set(7, 0.1, 0);
-    scene.add(...teammates);
+    if (!penalty) {
+      teammates[0].position.set(-7, 0.1, 7);
+      teammates[1].position.set(7, 0.1, 0);
+      scene.add(...teammates);
+    }
     const goalkeeper = createFootballer("keeper");
     goalkeeper.position.set(0, 0.1, -19.5);
     scene.add(goalkeeper);
-    const defenders = [-4, 4].map((x, index) => {
+    const defenders = penalty ? [] : [-4, 4].map((x, index) => {
       const defender = createFootballer("defender", String(index + 4));
       defender.position.set(x, 0.1, 2 - index * 6);
       scene.add(defender);
@@ -68,7 +71,7 @@ export function useFootballScene(
     let stamina = 100;
     let statsTimer = 0;
     const reset = () => {
-      player.position.set(0, 0.1, 14);
+      player.position.set(0, 0.1, penalty ? -3 : 14);
       player.rotation.set(0, 0, 0);
       ballVelocity.set(0, 0, 0);
       hasBall = true;
@@ -83,8 +86,7 @@ export function useFootballScene(
       defenders.forEach((defender, index) =>
         defender.position.set(index ? 4 : -4, 0.1, 2 - index * 6),
       );
-      teammates[0].position.set(-7, 0.1, 7);
-      teammates[1].position.set(7, 0.1, 0);
+      if (!penalty) { teammates[0].position.set(-7, 0.1, 7); teammates[1].position.set(7, 0.1, 0); }
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
@@ -142,9 +144,9 @@ export function useFootballScene(
         forward
           .set(0, 0, -1)
           .applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
-        if (keys.has("KeyW"))
+        if (!penalty && keys.has("KeyW"))
           activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * delta);
-        if (keys.has("KeyS"))
+        if (!penalty && keys.has("KeyS"))
           activePlayer.position.addScaledVector(forward, -3.8 * delta);
         activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -10, 10);
         activePlayer.position.z = THREE.MathUtils.clamp(activePlayer.position.z, -19, 19);
