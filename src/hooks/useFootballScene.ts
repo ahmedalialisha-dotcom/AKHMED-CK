@@ -1,7 +1,8 @@
 import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createGameSounds } from "../lib/footballAudio";
-import { addEveningStadium, createFootballer } from "../lib/footballStadium";
+import { addDayStadium, createFootballer } from "../lib/footballStadium";
+import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, KEEPER_Z } from "../lib/footballField";
 
 type SceneEvents = {
   onGoal: () => void;
@@ -26,23 +27,23 @@ export function useFootballScene(
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
-    addEveningStadium(scene);
+    addDayStadium(scene);
     const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     mount.appendChild(renderer.domElement);
     const player = createFootballer("star", "10");
-    player.position.set(0, 0.1, penalty ? -3 : 14);
+    player.position.set(0, 0.1, penalty ? -7 : 20);
     scene.add(player);
     const teammates = [createFootballer("star", "7"), createFootballer("star", "11")];
     if (!penalty) {
-      teammates[0].position.set(-7, 0.1, 7);
-      teammates[1].position.set(7, 0.1, 0);
+      teammates[0].position.set(-8, 0.1, 11);
+      teammates[1].position.set(8, 0.1, 2);
       scene.add(...teammates);
     }
     const goalkeeper = createFootballer("keeper");
-    goalkeeper.position.set(0, 0.1, -19.5);
+    goalkeeper.position.set(0, 0.1, KEEPER_Z);
     scene.add(goalkeeper);
     const defenders = penalty ? [] : [-4, 4].map((x, index) => {
       const defender = createFootballer("defender", String(index + 4));
@@ -77,7 +78,7 @@ export function useFootballScene(
     let statsTimer = 0;
     let resetTimer = 0;
     const reset = () => {
-      player.position.set(0, 0.1, penalty ? -3 : 14);
+      player.position.set(0, 0.1, penalty ? -7 : 20);
       player.rotation.set(0, 0, 0);
       ballVelocity.set(0, 0, 0);
       hasBall = true;
@@ -92,7 +93,7 @@ export function useFootballScene(
       defenders.forEach((defender, index) =>
         defender.position.set(index ? 4 : -4, 0.1, 2 - index * 6),
       );
-      if (!penalty) { teammates[0].position.set(-7, 0.1, 7); teammates[1].position.set(7, 0.1, 0); }
+      if (!penalty) { teammates[0].position.set(-8, 0.1, 11); teammates[1].position.set(8, 0.1, 2); }
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
@@ -160,8 +161,8 @@ export function useFootballScene(
           activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * delta);
         if (!penalty && keys.has("KeyS"))
           activePlayer.position.addScaledVector(forward, -3.8 * delta);
-        activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -10, 10);
-        activePlayer.position.z = THREE.MathUtils.clamp(activePlayer.position.z, -19, 19);
+        activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -FIELD_HALF_WIDTH + 1.5, FIELD_HALF_WIDTH - 1.5);
+        activePlayer.position.z = THREE.MathUtils.clamp(activePlayer.position.z, -FIELD_HALF_LENGTH + 2, FIELD_HALF_LENGTH - 2);
         if (hasBall) {
           const baseFoot = keys.has("KeyA") ? -0.27 : keys.has("KeyD") ? 0.27 : Math.sin(performance.now() / 110) * 0.16;
           const feintOffset = performance.now() < feintUntil && feintStyle === 2 ? Math.sin(performance.now() / 35) * .55 : 0;
@@ -203,15 +204,15 @@ export function useFootballScene(
           -2.6,
           2.6,
         );
-        goalkeeper.position.y = !hasBall && ball.position.z < -12 ? 0.1 + Math.sin(performance.now() / 80) * 0.55 : 0.1;
-        const lowDive = !hasBall && ball.position.z < -12 && ball.position.y < 1.1;
+        goalkeeper.position.y = !hasBall && ball.position.z < GOAL_Z + 8 ? 0.1 + Math.sin(performance.now() / 80) * 0.55 : 0.1;
+        const lowDive = !hasBall && ball.position.z < GOAL_Z + 8 && ball.position.y < 1.1;
         goalkeeper.rotation.z = lowDive ? THREE.MathUtils.clamp(-ball.position.x * .22, -.75, .75) : 0;
         goalkeeper.lookAt(
           ball.position.x,
           goalkeeper.position.y,
           ball.position.z,
         );
-        if (!hasBall && ball.position.z < -20.8 && !goalHandled) {
+        if (!hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
           goalHandled = true;
           finished = true;
           const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55;

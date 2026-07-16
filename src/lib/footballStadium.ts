@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
 
 const createNumber = (value: string) => {
   const canvas = document.createElement("canvas");
@@ -114,11 +115,11 @@ const addGoal = (scene: THREE.Scene) => {
   const material = new THREE.MeshStandardMaterial({ color: "#f5f4e9" });
   [-5, 5].forEach((x) => {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 0.2), material);
-    post.position.set(x, 2, -20.6);
+    post.position.set(x, 2, GOAL_Z);
     scene.add(post);
   });
   const bar = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.2, 0.2), material);
-  bar.position.set(0, 3.95, -20.6);
+  bar.position.set(0, 3.95, GOAL_Z);
   scene.add(bar);
   const net = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 3.8, 10, 6),
@@ -129,25 +130,25 @@ const addGoal = (scene: THREE.Scene) => {
       opacity: 0.55,
     }),
   );
-  net.position.set(0, 1.4, -20.85);
+  net.position.set(0, 1.4, GOAL_Z - 0.25);
   scene.add(net);
 };
 
-export const addEveningStadium = (scene: THREE.Scene) => {
-  scene.background = new THREE.Color("#071221");
-  scene.fog = new THREE.Fog("#071221", 30, 62);
+export const addDayStadium = (scene: THREE.Scene) => {
+  scene.background = new THREE.Color("#78bde7");
+  scene.fog = new THREE.Fog("#b9dded", 48, 92);
   const grass = new THREE.Mesh(
-    new THREE.BoxGeometry(24, 0.25, 42),
-    new THREE.MeshStandardMaterial({ color: "#17613f", roughness: 1 }),
+    new THREE.BoxGeometry(FIELD_WIDTH, 0.25, FIELD_LENGTH),
+    new THREE.MeshStandardMaterial({ color: "#278a50", roughness: 1 }),
   );
   grass.receiveShadow = true;
   scene.add(grass);
   const line = new THREE.LineLoop(
     new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-11.7, 0.14, -20.7),
-      new THREE.Vector3(11.7, 0.14, -20.7),
-      new THREE.Vector3(11.7, 0.14, 20.7),
-      new THREE.Vector3(-11.7, 0.14, 20.7),
+      new THREE.Vector3(-FIELD_HALF_WIDTH + 0.3, 0.14, -FIELD_HALF_LENGTH + 0.3),
+      new THREE.Vector3(FIELD_HALF_WIDTH - 0.3, 0.14, -FIELD_HALF_LENGTH + 0.3),
+      new THREE.Vector3(FIELD_HALF_WIDTH - 0.3, 0.14, FIELD_HALF_LENGTH - 0.3),
+      new THREE.Vector3(-FIELD_HALF_WIDTH + 0.3, 0.14, FIELD_HALF_LENGTH - 0.3),
     ]),
     new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
   );
@@ -165,11 +166,11 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     ),
     new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
   );
-  scene.add(circle, new THREE.HemisphereLight("#7ba5cf", "#0c1f18", 1.4));
-  scene.add(new THREE.AmbientLight("#8eb7df", 2.1));
-  const moonlight = new THREE.DirectionalLight("#c6e1ff", 4);
-  moonlight.position.set(0, 18, 4);
-  scene.add(moonlight);
+  scene.add(circle, new THREE.HemisphereLight("#e7f6ff", "#28613e", 1.8));
+  scene.add(new THREE.AmbientLight("#ffffff", 1.25));
+  const sunlight = new THREE.DirectionalLight("#fff2cf", 3.4);
+  sunlight.position.set(-12, 22, 10);
+  scene.add(sunlight);
   addGoal(scene);
   const standMaterial = new THREE.MeshStandardMaterial({
     color: "#142337",
@@ -178,7 +179,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
   for (let part = 0; part < 8; part += 1) {
     const angle = Math.PI * .15 + (part / 7) * Math.PI * .5;
     const stand = new THREE.Mesh(new THREE.BoxGeometry(10, 7, 8), standMaterial);
-    stand.position.set(Math.cos(angle) * 27, 3.2, -Math.abs(Math.sin(angle) * 27) - 8);
+    stand.position.set(Math.cos(angle) * 35, 3.2, -Math.abs(Math.sin(angle) * 35) - 8);
     stand.rotation.y = -angle;
     scene.add(stand);
   }
@@ -194,9 +195,9 @@ export const addEveningStadium = (scene: THREE.Scene) => {
           }),
         );
         fan.position.set(
-          side * (12 + row * 0.65),
+          side * (17 + row * 0.65),
           1 + row * 0.72,
-          -22 + column * .7,
+          -27 + column * .9,
         );
         fan.userData.fanBaseY = fan.position.y;
         fan.userData.fanPhase = (row * 7 + column * 3 + side) * .45;
@@ -210,9 +211,9 @@ export const addEveningStadium = (scene: THREE.Scene) => {
         [-1, 1].forEach((side) => {
           if ((row + column) % fanColors.length !== colorIndex) return;
           positions.push(new THREE.Matrix4().makeTranslation(
-            side * (12.2 + row * 0.62),
+            side * (17.2 + row * 0.62),
             0.9 + row * 0.7,
-            -19 + column * 0.96,
+            -25.5 + column * 1.3,
           ));
         });
     const sideFans = new THREE.InstancedMesh(
@@ -225,20 +226,20 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     scene.add(sideFans);
   });
   [
-    [-14, -19],
-    [14, -19],
-    [-14, 19],
-    [14, 19],
+    [-18.5, -25],
+    [18.5, -25],
+    [-18.5, 25],
+    [18.5, 25],
   ].forEach(([x, z]) => {
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.11, 0.11, 11),
       new THREE.MeshStandardMaterial({ color: "#52606f" }),
     );
     pole.position.set(x, 5.5, z);
-    const lamp = new THREE.PointLight("#dcefff", 140, 42, 2);
+    const lamp = new THREE.PointLight("#fff4d6", 25, 46, 2);
     lamp.position.set(x, 10.5, z);
     scene.add(pole, lamp);
-    const spotlight = new THREE.SpotLight("#e8f4ff", 1400, 48, Math.PI / 6, 0.45, 1.5);
+    const spotlight = new THREE.SpotLight("#fff6df", 180, 55, Math.PI / 6, 0.45, 1.5);
     spotlight.position.copy(lamp.position);
     spotlight.target.position.set(0, 0, 0);
     scene.add(spotlight, spotlight.target);
