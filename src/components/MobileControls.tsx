@@ -17,6 +17,9 @@ function ControlButton({ code, label, className = "" }: ControlButtonProps) {
       className={className}
       onContextMenu={(event) => event.preventDefault()}
       onPointerCancel={release}
+      onPointerLeave={(event) => {
+        if (event.buttons) release();
+      }}
       onPointerDown={(event) => {
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);

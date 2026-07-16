@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createGameSounds } from "../lib/footballAudio";
 import { addEveningStadium, createFootballer } from "../lib/footballStadium";
@@ -19,6 +19,9 @@ export function useFootballScene(
   canShoot = true,
   resetKey = 0,
 ) {
+  const canShootRef = useRef(canShoot);
+  useEffect(() => { canShootRef.current = canShoot; }, [canShoot]);
+
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
@@ -72,6 +75,7 @@ export function useFootballScene(
     let curvedShot = false;
     let stamina = 100;
     let statsTimer = 0;
+    let resetTimer = 0;
     const reset = () => {
       player.position.set(0, 0.1, penalty ? -3 : 14);
       player.rotation.set(0, 0, 0);
@@ -97,13 +101,13 @@ export function useFootballScene(
         event.preventDefault();
       sounds.startCrowd();
       keys.add(event.code);
-      if (event.code === "KeyR" && canShoot) reset();
+      if (event.code === "KeyR" && canShootRef.current) reset();
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
-      if (event.code === "KeyE" && hasBall) {
+      if (event.code === "KeyE" && hasBall && !penalty) {
         const target = teammates.filter((teammate) => teammate !== activePlayer).sort((first, second) => first.position.distanceTo(activePlayer.position) - second.position.distanceTo(activePlayer.position))[0];
         if (target) { passTarget = target; hasBall = false; ballVelocity.copy(target.position.clone().sub(activePlayer.position).setY(0).normalize().multiplyScalar(0.55)); sounds.playKick(); }
       }
-      if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShoot) {
+      if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShootRef.current) {
         const style = event.code;
         curvedShot = style === "KeyF";
         hasBall = false;
@@ -113,19 +117,25 @@ export function useFootballScene(
         ballVelocity.set(side, lift, -speed).applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         sounds.playKick();
       }
-      if (event.code === "Space" && hasBall && !finished && !chargeStarted && canShoot) chargeStarted = performance.now();
+      if (event.code === "Space" && hasBall && !finished && !chargeStarted && canShootRef.current) chargeStarted = performance.now();
     };
     const onKeyUp = (event: KeyboardEvent) => {
       keys.delete(event.code);
-      if (event.code === "Space" && chargeStarted && hasBall && !finished && canShoot) {
+      if (event.code === "Space" && chargeStarted && hasBall && !finished && canShootRef.current) {
         const power = THREE.MathUtils.clamp((performance.now() - chargeStarted) / 900, .2, 1);
         hasBall = false;
         ballVelocity.set(0, .07 + power * .28, -(.55 + power * 1.25)).applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         chargeStarted = 0; sounds.playKick();
       }
     };
+    const releaseControls = () => {
+      keys.clear();
+      chargeStarted = 0;
+      events.onStats(0);
+    };
     window.addEventListener("keydown", onKeyDown);
     window.addEventListener("keyup", onKeyUp);
+    window.addEventListener("blur", releaseControls);
     const clock = new THREE.Clock();
     const forward = new THREE.Vector3();
     let animationId = 0;
@@ -214,7 +224,8 @@ export function useFootballScene(
           } else events.onMiss();
           if (!(onTarget && Math.abs(ball.position.x) < 4.5 && !saved)) events.onAttempt(false);
           if (!penalty) {
-            if (celebrationUntil) window.setTimeout(reset, 5000); else reset();
+            if (celebrationUntil) resetTimer = window.setTimeout(reset, 5000);
+            else reset();
           }
         }
       } else if (celebrationUntil > performance.now()) {
@@ -250,9 +261,23 @@ export function useFootballScene(
       observer.disconnect();
       window.removeEventListener("keydown", onKeyDown);
       window.removeEventListener("keyup", onKeyUp);
+      window.removeEventListener("blur", releaseControls);
+      window.clearTimeout(resetTimer);
+      events.onStats(0);
       sounds.dispose();
+      scene.traverse((item) => {
+        if (!(item instanceof THREE.Mesh)) return;
+        item.geometry.dispose();
+        const materials = Array.isArray(item.material) ? item.material : [item.material];
+        materials.forEach((material) => {
+          Object.values(material).forEach((value) => {
+            if (value instanceof THREE.Texture) value.dispose();
+          });
+          material.dispose();
+        });
+      });
       renderer.dispose();
-      mount.removeChild(renderer.domElement);
+      renderer.domElement.remove();
     };
-  }, [canShoot, events, mountRef, penalty, resetKey]);
+  }, [events, mountRef, penalty, resetKey]);
 }

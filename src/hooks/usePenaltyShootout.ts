@@ -11,13 +11,16 @@ export function usePenaltyShootout() {
   const [message, setMessage] = useState("Ваш удар. Выберите угол и силу.");
   const [roundKey, setRoundKey] = useState(0);
   const timers = useRef<number[]>([]);
+  const score = useRef({ opponentAttempts, opponentGoals, playerAttempts, playerGoals, turn });
+  score.current = { opponentAttempts, opponentGoals, playerAttempts, playerGoals, turn };
 
   useEffect(() => () => timers.current.forEach(window.clearTimeout), []);
 
   const recordPlayerShot = useCallback((scored: boolean) => {
-    if (turn !== "player") return;
-    const nextPlayerGoals = playerGoals + Number(scored);
-    const nextPlayerAttempts = playerAttempts + 1;
+    const current = score.current;
+    if (current.turn !== "player") return;
+    const nextPlayerGoals = current.playerGoals + Number(scored);
+    const nextPlayerAttempts = current.playerAttempts + 1;
     setPlayerGoals(nextPlayerGoals);
     setPlayerAttempts(nextPlayerAttempts);
     setTurn("opponent");
@@ -25,8 +28,8 @@ export function usePenaltyShootout() {
 
     timers.current.push(window.setTimeout(() => {
       const opponentScored = Math.random() < 0.65;
-      const nextOpponentGoals = opponentGoals + Number(opponentScored);
-      const nextOpponentAttempts = opponentAttempts + 1;
+      const nextOpponentGoals = current.opponentGoals + Number(opponentScored);
+      const nextOpponentAttempts = current.opponentAttempts + 1;
       setOpponentGoals(nextOpponentGoals);
       setOpponentAttempts(nextOpponentAttempts);
 
@@ -47,7 +50,7 @@ export function usePenaltyShootout() {
         setMessage(suddenDeath ? "Дополнительный удар. Забейте!" : "Ваш удар!");
       }, NEXT_SHOT_DELAY));
     }, NEXT_SHOT_DELAY));
-  }, [opponentAttempts, opponentGoals, playerAttempts, playerGoals, turn]);
+  }, []);
 
   return {
     message, opponentAttempts, opponentGoals, playerAttempts, playerGoals,
