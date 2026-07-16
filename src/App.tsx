@@ -6,7 +6,6 @@ import { Auth } from './components/Auth';
 import { supabase } from './lib/supabase';
 import './menu.css';
 import './auth.css';
-import './vibrant-theme.css';
 
 export default function App() {
   const [screen, setScreen] = useState<'menu' | 'match' | 'penalty' | 'career' | 'settings' | 'auth' | 'profile'>('menu');

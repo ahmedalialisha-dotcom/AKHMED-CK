@@ -46,10 +46,10 @@ export const createFootballer = (
   const player = new THREE.Group();
   const colors =
     kind === "star"
-      ? ["#ffe12b", "#00a86b"]
+      ? ["#f4d33b", "#168b64"]
       : kind === "keeper"
-        ? ["#ff9f1c", "#172554"]
-        : ["#f8fafc", "#3157c8"];
+        ? ["#f2b632", "#1d2532"]
+        : ["#e9ece8", "#304070"];
   const shirt = new THREE.MeshStandardMaterial({
     color: colors[0],
     roughness: 0.7,
@@ -61,7 +61,7 @@ export const createFootballer = (
   const skin = new THREE.MeshStandardMaterial({
     color: kind === "star" ? "#a65f42" : "#8c543d",
   });
-  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#155eef" : "#111b4d" });
+  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#244fa4" : "#10172e" });
   const boot = new THREE.MeshStandardMaterial({ color: "#111218" });
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.43, 0.78, 5, 10),
@@ -138,7 +138,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
   scene.fog = new THREE.Fog("#071221", 30, 62);
   const grass = new THREE.Mesh(
     new THREE.BoxGeometry(24, 0.25, 42),
-    new THREE.MeshStandardMaterial({ color: "#16a34a", roughness: 0.82 }),
+    new THREE.MeshStandardMaterial({ color: "#17613f", roughness: 1 }),
   );
   grass.receiveShadow = true;
   scene.add(grass);
@@ -172,7 +172,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
   scene.add(moonlight);
   addGoal(scene);
   const standMaterial = new THREE.MeshStandardMaterial({
-    color: "#1d3557",
+    color: "#142337",
     roughness: 0.9,
   });
   for (let part = 0; part < 8; part += 1) {
@@ -182,7 +182,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     stand.rotation.y = -angle;
     scene.add(stand);
   }
-  const fanColors = ["#ff365e", "#ffd230", "#f8fafc", "#3185ff", "#19c37d"];
+  const fanColors = ["#db3f4f", "#f1c04b", "#e7ecee", "#4e86c7"];
   for (let row = 0; row < 8; row += 1)
     for (let column = 0; column < 20; column += 1)
       [-1, 1].forEach((side) => {
@@ -202,6 +202,28 @@ export const addEveningStadium = (scene: THREE.Scene) => {
         fan.userData.fanPhase = (row * 7 + column * 3 + side) * .45;
         scene.add(fan);
       });
+  const sideFanShape = new THREE.BoxGeometry(0.34, 0.52, 0.34);
+  fanColors.forEach((color, colorIndex) => {
+    const positions: THREE.Matrix4[] = [];
+    for (let row = 0; row < 7; row += 1)
+      for (let column = 0; column < 40; column += 1)
+        [-1, 1].forEach((side) => {
+          if ((row + column) % fanColors.length !== colorIndex) return;
+          positions.push(new THREE.Matrix4().makeTranslation(
+            side * (12.2 + row * 0.62),
+            0.9 + row * 0.7,
+            -19 + column * 0.96,
+          ));
+        });
+    const sideFans = new THREE.InstancedMesh(
+      sideFanShape,
+      new THREE.MeshStandardMaterial({ color }),
+      positions.length,
+    );
+    positions.forEach((matrix, index) => sideFans.setMatrixAt(index, matrix));
+    sideFans.instanceMatrix.needsUpdate = true;
+    scene.add(sideFans);
+  });
   [
     [-14, -19],
     [14, -19],
