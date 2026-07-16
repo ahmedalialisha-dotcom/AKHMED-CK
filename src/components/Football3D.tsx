@@ -74,7 +74,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
       {isPhone && <MobileControls penalty={penalty} />}
       <section className={`how-to ${isPhone ? "how-to--phone" : ""}`}>
         <h2>Управление</h2>
-        {isPhone ? <p>Удерживай стрелки для движения и кнопку «УДАР» для выбора силы. Отпусти её, чтобы пробить.</p> : <>
+        {isPhone ? <p>Удерживай «БЕГ» вместе со стрелкой вперёд для ускорения. Кнопку «УДАР» удерживай для выбора силы и отпусти, чтобы пробить.</p> : <>
         <div className="how-to__keys">
           <p>{penalty ? <><kbd>A</kbd> <kbd>D</kbd> выбрать угол · удерживай <kbd>Space</kbd> и отпусти в зелёной зоне</> : <><kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад</>}</p>
           <p>

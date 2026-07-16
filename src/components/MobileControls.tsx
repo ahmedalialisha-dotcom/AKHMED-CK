@@ -39,6 +39,7 @@ export default function MobileControls({ penalty }: Props) {
       <div className="mobile-controls__move">
         {!penalty && <ControlButton code="KeyW" label="▲" className="move-up" />}
         <ControlButton code="KeyA" label="◀" className="move-left" />
+        {!penalty && <ControlButton code="KeyQ" label="БЕГ" className="move-sprint" />}
         <ControlButton code="KeyD" label="▶" className="move-right" />
         {!penalty && <ControlButton code="KeyS" label="▼" className="move-down" />}
       </div>
