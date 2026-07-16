@@ -46,10 +46,10 @@ export const createFootballer = (
   const player = new THREE.Group();
   const colors =
     kind === "star"
-      ? ["#f4d33b", "#168b64"]
+      ? ["#ffe12b", "#00a86b"]
       : kind === "keeper"
-        ? ["#f2b632", "#1d2532"]
-        : ["#e9ece8", "#304070"];
+        ? ["#ff9f1c", "#172554"]
+        : ["#f8fafc", "#3157c8"];
   const shirt = new THREE.MeshStandardMaterial({
     color: colors[0],
     roughness: 0.7,
@@ -61,7 +61,7 @@ export const createFootballer = (
   const skin = new THREE.MeshStandardMaterial({
     color: kind === "star" ? "#a65f42" : "#8c543d",
   });
-  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#244fa4" : "#10172e" });
+  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#155eef" : "#111b4d" });
   const boot = new THREE.MeshStandardMaterial({ color: "#111218" });
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.43, 0.78, 5, 10),
@@ -134,11 +134,11 @@ const addGoal = (scene: THREE.Scene) => {
 };
 
 export const addEveningStadium = (scene: THREE.Scene) => {
-  scene.background = new THREE.Color("#071221");
-  scene.fog = new THREE.Fog("#071221", 30, 62);
+  scene.background = new THREE.Color("#0b3b68");
+  scene.fog = new THREE.Fog("#174c70", 38, 72);
   const grass = new THREE.Mesh(
     new THREE.BoxGeometry(24, 0.25, 42),
-    new THREE.MeshStandardMaterial({ color: "#17613f", roughness: 1 }),
+    new THREE.MeshStandardMaterial({ color: "#16a34a", roughness: 0.82 }),
   );
   grass.receiveShadow = true;
   scene.add(grass);
@@ -165,15 +165,23 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     ),
     new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
   );
-  scene.add(circle, new THREE.HemisphereLight("#7ba5cf", "#0c1f18", 1.4));
-  scene.add(new THREE.AmbientLight("#8eb7df", 2.1));
-  const moonlight = new THREE.DirectionalLight("#c6e1ff", 2.2);
-  moonlight.intensity = 4;
-  moonlight.position.set(0, 18, 4);
+  scene.add(circle, new THREE.HemisphereLight("#8dd7ff", "#0b4f2b", 2.1));
+  scene.add(new THREE.AmbientLight("#b9dcff", 1.15));
+  const moonlight = new THREE.DirectionalLight("#fff4d6", 3.2);
+  moonlight.position.set(-8, 18, 8);
+  moonlight.castShadow = true;
+  moonlight.shadow.mapSize.set(1024, 1024);
+  moonlight.shadow.camera.left = -18;
+  moonlight.shadow.camera.right = 18;
+  moonlight.shadow.camera.top = 22;
+  moonlight.shadow.camera.bottom = -22;
   scene.add(moonlight);
+  const rimLight = new THREE.DirectionalLight("#52c7ff", 2.2);
+  rimLight.position.set(12, 9, -16);
+  scene.add(rimLight);
   addGoal(scene);
   const standMaterial = new THREE.MeshStandardMaterial({
-    color: "#142337",
+    color: "#1d3557",
     roughness: 0.9,
   });
   for (let part = 0; part < 8; part += 1) {
@@ -183,7 +191,7 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     stand.rotation.y = -angle;
     scene.add(stand);
   }
-  const fanColors = ["#db3f4f", "#f1c04b", "#e7ecee", "#4e86c7"];
+  const fanColors = ["#ff365e", "#ffd230", "#f8fafc", "#3185ff", "#19c37d"];
   for (let row = 0; row < 8; row += 1)
     for (let column = 0; column < 20; column += 1)
       [-1, 1].forEach((side) => {
@@ -214,10 +222,10 @@ export const addEveningStadium = (scene: THREE.Scene) => {
       new THREE.MeshStandardMaterial({ color: "#52606f" }),
     );
     pole.position.set(x, 5.5, z);
-    const lamp = new THREE.PointLight("#dcefff", 140, 42, 2);
+    const lamp = new THREE.PointLight("#fff4d6", 95, 44, 2);
     lamp.position.set(x, 10.5, z);
     scene.add(pole, lamp);
-    const spotlight = new THREE.SpotLight("#e8f4ff", 1400, 48, Math.PI / 6, 0.45, 1.5);
+    const spotlight = new THREE.SpotLight("#fff7df", 950, 52, Math.PI / 5.5, 0.55, 1.35);
     spotlight.position.copy(lamp.position);
     spotlight.target.position.set(0, 0, 0);
     scene.add(spotlight, spotlight.target);

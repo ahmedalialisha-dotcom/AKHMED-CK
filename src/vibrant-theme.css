@@ -1,0 +1,99 @@
+:root {
+  --bg: #f3f7ff;
+  --card: #ffffff;
+  --ink: #10243d;
+  --soft: #536b84;
+  --clay: #ff5a36;
+  --line: #d9e5f2;
+}
+
+body {
+  background: linear-gradient(135deg, #f5f9ff, #eefbf5);
+}
+
+.home-menu__shade {
+  background: linear-gradient(90deg, #052f4bf2 0%, #063c52d9 43%, #0753416b 76%, transparent),
+    linear-gradient(0deg, #052b43d9 0%, transparent 52%);
+}
+
+.brand > span,
+.brand > i,
+.mode-card--featured,
+.primary-action,
+.profile-avatar {
+  background: #ffc928;
+}
+
+.eyebrow,
+.auth-page__intro > p,
+.tournament-card i {
+  color: #ffc928;
+}
+
+.mode-card {
+  background: #fffffff2;
+  box-shadow: 0 12px 30px #002b3a24;
+}
+
+.mode-card--featured {
+  border-color: #ffe076;
+}
+
+.surface-page,
+.tournament-page {
+  background: linear-gradient(145deg, #f7fbff, #ecf8f0);
+}
+
+.player-card.selected,
+.tournament-card,
+.auth-submit,
+.profile-panel button {
+  background: linear-gradient(135deg, #075f67, #087f5b);
+}
+
+.tournament-card--gold {
+  background: linear-gradient(135deg, #ffd22e, #ff9f1c);
+}
+
+.auth-page {
+  background: radial-gradient(circle at 15% 80%, #0d8b68 0, transparent 35%),
+    linear-gradient(135deg, #063c62, #07543f);
+}
+
+.three-game {
+  background: linear-gradient(180deg, #edf8ff, #f2fff6);
+}
+
+.three-game__brief {
+  background: linear-gradient(90deg, #075f67, #087f5b);
+  border-left-color: #ffcf32;
+  box-shadow: 0 10px 25px #075f6729;
+}
+
+.three-game__canvas {
+  border-color: #ffffff;
+  box-shadow: 0 22px 50px #005a7a38;
+}
+
+.goal-counter {
+  border-color: #cde5f1;
+  box-shadow: 0 8px 22px #075f6717;
+}
+
+.match-hud b,
+.mobile-controls .shoot-button {
+  background: #ffb703;
+}
+
+.match-hud .stamina b {
+  background: #21d07a;
+}
+
+.mobile-controls button {
+  background: #087f5b;
+  box-shadow: 0 7px 16px #075f6738;
+}
+
+.penalty-timing span { background: #f0445d; }
+.penalty-timing b { background: #f5a623; }
+.penalty-timing strong { background: #16a765; }
