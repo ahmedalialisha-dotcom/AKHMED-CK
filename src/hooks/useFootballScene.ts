@@ -30,11 +30,7 @@ export function useFootballScene(
     const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.outputColorSpace = THREE.SRGBColorSpace;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.28;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mount.appendChild(renderer.domElement);
     const player = createFootballer("star", "10");
     player.position.set(0, 0.1, penalty ? -3 : 14);

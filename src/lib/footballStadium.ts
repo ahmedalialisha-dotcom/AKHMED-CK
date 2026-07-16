@@ -134,8 +134,8 @@ const addGoal = (scene: THREE.Scene) => {
 };
 
 export const addEveningStadium = (scene: THREE.Scene) => {
-  scene.background = new THREE.Color("#0b3b68");
-  scene.fog = new THREE.Fog("#174c70", 38, 72);
+  scene.background = new THREE.Color("#071221");
+  scene.fog = new THREE.Fog("#071221", 30, 62);
   const grass = new THREE.Mesh(
     new THREE.BoxGeometry(24, 0.25, 42),
     new THREE.MeshStandardMaterial({ color: "#16a34a", roughness: 0.82 }),
@@ -165,20 +165,11 @@ export const addEveningStadium = (scene: THREE.Scene) => {
     ),
     new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
   );
-  scene.add(circle, new THREE.HemisphereLight("#8dd7ff", "#0b4f2b", 2.1));
-  scene.add(new THREE.AmbientLight("#b9dcff", 1.15));
-  const moonlight = new THREE.DirectionalLight("#fff4d6", 3.2);
-  moonlight.position.set(-8, 18, 8);
-  moonlight.castShadow = true;
-  moonlight.shadow.mapSize.set(1024, 1024);
-  moonlight.shadow.camera.left = -18;
-  moonlight.shadow.camera.right = 18;
-  moonlight.shadow.camera.top = 22;
-  moonlight.shadow.camera.bottom = -22;
+  scene.add(circle, new THREE.HemisphereLight("#7ba5cf", "#0c1f18", 1.4));
+  scene.add(new THREE.AmbientLight("#8eb7df", 2.1));
+  const moonlight = new THREE.DirectionalLight("#c6e1ff", 4);
+  moonlight.position.set(0, 18, 4);
   scene.add(moonlight);
-  const rimLight = new THREE.DirectionalLight("#52c7ff", 2.2);
-  rimLight.position.set(12, 9, -16);
-  scene.add(rimLight);
   addGoal(scene);
   const standMaterial = new THREE.MeshStandardMaterial({
     color: "#1d3557",
@@ -222,10 +213,10 @@ export const addEveningStadium = (scene: THREE.Scene) => {
       new THREE.MeshStandardMaterial({ color: "#52606f" }),
     );
     pole.position.set(x, 5.5, z);
-    const lamp = new THREE.PointLight("#fff4d6", 95, 44, 2);
+    const lamp = new THREE.PointLight("#dcefff", 140, 42, 2);
     lamp.position.set(x, 10.5, z);
     scene.add(pole, lamp);
-    const spotlight = new THREE.SpotLight("#fff7df", 950, 52, Math.PI / 5.5, 0.55, 1.35);
+    const spotlight = new THREE.SpotLight("#e8f4ff", 1400, 48, Math.PI / 6, 0.45, 1.5);
     spotlight.position.copy(lamp.position);
     spotlight.target.position.set(0, 0, 0);
     scene.add(spotlight, spotlight.target);
