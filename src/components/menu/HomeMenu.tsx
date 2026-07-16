@@ -1,0 +1,54 @@
+import neymarHero from "../../assets/neymar-hero.png";
+import type { NavigateScreen } from "../MainMenu";
+
+type Props = {
+  userEmail?: string;
+  onStart: (mode: string) => void;
+  onScreen: (screen: NavigateScreen) => void;
+};
+
+const actions = [
+  { icon: "⚡", title: "Быстрый матч", text: "Сразу выйти на поле", action: "match" },
+  { icon: "◎", title: "Серия пенальти", text: "Пять ударов до победы", action: "penalty" },
+  { icon: "★", title: "Карьера", text: "Создать своего игрока", action: "career" },
+  { icon: "◆", title: "Турниры", text: "Выбрать большое событие", action: "settings" },
+];
+
+export default function HomeMenu({ userEmail, onStart, onScreen }: Props) {
+  const selectAction = (action: string) => {
+    if (action === "match") onStart("Быстрый матч");
+    else onScreen(action as "penalty" | "career" | "settings");
+  };
+
+  return (
+    <main className="home-menu" style={{ backgroundImage: `url(${neymarHero})` }}>
+      <div className="home-menu__shade" />
+      <header className="home-menu__topbar">
+        <a className="brand" href="#top" aria-label="Football Moments 3D">
+          <span>FM</span><strong>Football Moments</strong>
+        </a>
+        <button className="profile-chip" onClick={() => onScreen(userEmail ? "profile" : "auth")}>
+          <span>{userEmail ? userEmail[0].toUpperCase() : "○"}</span>
+          {userEmail ?? "Войти"}
+        </button>
+      </header>
+      <section className="home-menu__content" id="top">
+        <div className="home-menu__intro">
+          <p className="eyebrow">ТВОЙ МОМЕНТ НА ПОЛЕ</p>
+          <h1>Футбол начинается с одного удара.</h1>
+          <p className="lead">Выбери режим, почувствуй стадион и создай момент, который хочется повторить.</p>
+        </div>
+        <nav className="mode-grid" aria-label="Режимы игры">
+          {actions.map((item, index) => (
+            <button className={index === 0 ? "mode-card mode-card--featured" : "mode-card"} onClick={() => selectAction(item.action)} key={item.action}>
+              <span className="mode-card__icon">{item.icon}</span>
+              <span><strong>{item.title}</strong><small>{item.text}</small></span>
+              <i>→</i>
+            </button>
+          ))}
+        </nav>
+      </section>
+      <footer className="home-menu__footer"><span>3D FOOTBALL EXPERIENCE</span><span>КЛАВИАТУРА · СЕНСОРНЫЙ ЭКРАН</span></footer>
+    </main>
+  );
+}
