@@ -1,6 +1,8 @@
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useFootballScene } from "../hooks/useFootballScene";
 import { usePenaltyShootout } from "../hooks/usePenaltyShootout";
+import { useDeviceMode } from "../hooks/useDeviceMode";
+import MobileControls from "./MobileControls";
 import "../football3d.css";
 
 type Props = { onExit: () => void; tournament: string; penalty?: boolean };
@@ -13,6 +15,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
   const [attempts, setAttempts] = useState(0);
   const [power, setPower] = useState(0);
   const [stamina, setStamina] = useState(100);
+  const isPhone = useDeviceMode();
   const shootout = usePenaltyShootout();
   const onGoal = useCallback(() => {
     setGoals((current) => current + 1);
@@ -44,7 +47,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
     : `доп. ${shootout.playerAttempts - 4}`;
 
   return (
-    <main className="three-game">
+    <main className={`three-game ${isPhone ? "three-game--phone" : "three-game--desktop"}`}>
       <header className="three-game__header">
         <div>
           <p>{tournament} · FOOTBALL MOMENTS 3D</p>
@@ -66,8 +69,10 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
       />
       <div className="match-hud"><div><span>СИЛА УДАРА</span><i><b style={{ width: `${power}%` }} /></i></div><div><span>ВЫНОСЛИВОСТЬ</span><i className="stamina"><b style={{ width: `${stamina}%` }} /></i></div></div>
       {penalty && <div className="penalty-timing"><span>СЛИШКОМ СЛАБО</span><b>50 / 50</b><strong>ТОЧНО</strong></div>}
-      <section className="how-to">
+      {isPhone && <MobileControls penalty={penalty} />}
+      <section className={`how-to ${isPhone ? "how-to--phone" : ""}`}>
         <h2>Управление</h2>
+        {isPhone ? <p>Удерживай стрелки для движения и кнопку «УДАР» для выбора силы. Отпусти её, чтобы пробить.</p> : <>
         <div className="how-to__keys">
           <p>{penalty ? <><kbd>A</kbd> <kbd>D</kbd> выбрать угол · удерживай <kbd>Space</kbd> и отпусти в зелёной зоне</> : <><kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад</>}</p>
           <p>
@@ -85,6 +90,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
         <small>
           Чем дольше держишь Space, тем сильнее удар. После паса управление перейдёт к принявшему партнёру.
         </small>
+        </>}
       </section>
       <button className="text-button" onClick={onExit}>← В главное меню</button>
     </main>
