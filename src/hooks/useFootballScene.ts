@@ -2,12 +2,13 @@ import { useEffect, useRef } from "react";
 import * as THREE from "three";
 import { createGameSounds } from "../lib/footballAudio";
 import { addDayStadium, createFootballer } from "../lib/footballStadium";
-import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, KEEPER_Z } from "../lib/footballField";
+import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, HOME_GOAL_Z, HOME_KEEPER_Z, KEEPER_Z } from "../lib/footballField";
 
 type SceneEvents = {
   onGoal: () => void;
   onMiss: () => void;
-  onTackle: () => void;
+  onTackle: (distance: "ближней" | "средней" | "дальней") => void;
+  onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
   onStamina: (stamina: number) => void;
@@ -45,9 +46,14 @@ export function useFootballScene(
     const goalkeeper = createFootballer("keeper");
     goalkeeper.position.set(0, 0.1, KEEPER_Z);
     scene.add(goalkeeper);
-    const defenders = penalty ? [] : [-4, 4].map((x, index) => {
+    const homeGoalkeeper = createFootballer("keeper");
+    homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
+    homeGoalkeeper.rotation.y = Math.PI;
+    scene.add(homeGoalkeeper);
+    const defenderPositions = [[-5, 14], [5, 4], [-3, -8]];
+    const defenders = penalty ? [] : defenderPositions.map(([x, z], index) => {
       const defender = createFootballer("defender", String(index + 4));
-      defender.position.set(x, 0.1, 2 - index * 6);
+      defender.position.set(x, 0.1, z);
       scene.add(defender);
       return defender;
     });
@@ -74,6 +80,7 @@ export function useFootballScene(
     let goalHandled = false;
     let celebrationUntil = 0;
     let curvedShot = false;
+    let enemyShot = false;
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
@@ -90,8 +97,9 @@ export function useFootballScene(
       goalHandled = false;
       celebrationUntil = 0;
       curvedShot = false;
+      enemyShot = false;
       defenders.forEach((defender, index) =>
-        defender.position.set(index ? 4 : -4, 0.1, 2 - index * 6),
+        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]),
       );
       if (!penalty) { teammates[0].position.set(-8, 0.1, 11); teammates[1].position.set(8, 0.1, 2); }
     };
@@ -185,6 +193,7 @@ export function useFootballScene(
           if (passTarget && ball.position.distanceTo(passTarget.position) < 0.9) { activePlayer = passTarget; hasBall = true; passTarget = undefined; }
         }
         defenders.forEach((defender) => {
+          if (enemyShot) return;
           const target = hasBall ? activePlayer.position : ball.position;
           const chase = target.clone().sub(defender.position).setY(0);
           if (chase.length() > 0.1)
@@ -192,11 +201,17 @@ export function useFootballScene(
           defender.lookAt(target.x, defender.position.y, target.z);
           if (hasBall && defender.position.distanceTo(activePlayer.position) < 0.82) {
             hasBall = false;
-            ballVelocity.copy(chase.normalize().multiplyScalar(0.38));
+            enemyShot = true;
+            const distance = HOME_GOAL_Z - defender.position.z;
+            const targetX = THREE.MathUtils.randFloat(-3.8, 3.8);
+            ballVelocity.set(
+              targetX - ball.position.x,
+              Math.min(5, 1.8 + distance * 0.07),
+              distance,
+            ).normalize().multiplyScalar(distance > 28 ? 1.15 : distance > 16 ? 1.05 : 0.92);
+            ballVelocity.y = distance > 28 ? 0.2 : distance > 16 ? 0.16 : 0.12;
             sounds.playTackle();
-            events.onTackle();
-            events.onAttempt(false);
-            reset();
+            events.onTackle(distance > 28 ? "дальней" : distance > 16 ? "средней" : "ближней");
           }
         });
         goalkeeper.position.x = THREE.MathUtils.clamp(
@@ -212,7 +227,19 @@ export function useFootballScene(
           goalkeeper.position.y,
           ball.position.z,
         );
-        if (!hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
+        if (enemyShot) {
+          homeGoalkeeper.position.x = THREE.MathUtils.clamp(ball.position.x * 0.55, -2.6, 2.6);
+          homeGoalkeeper.lookAt(ball.position.x, homeGoalkeeper.position.y, ball.position.z);
+          if (ball.position.z > HOME_GOAL_Z + 0.2 && !goalHandled) {
+            goalHandled = true;
+            finished = true;
+            const saved = Math.abs(ball.position.x - homeGoalkeeper.position.x) < 0.72;
+            const scored = Math.abs(ball.position.x) < 4.5 && ball.position.y < 4 && !saved;
+            events.onConcede(scored);
+            resetTimer = window.setTimeout(reset, 2200);
+          }
+        }
+        if (!enemyShot && !hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
           goalHandled = true;
           finished = true;
           const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55;

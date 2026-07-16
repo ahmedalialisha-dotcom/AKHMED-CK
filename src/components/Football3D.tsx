@@ -25,17 +25,19 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
     () => setMessage("Мимо ворот. Нажми R и выбери угол точнее."),
     [],
   );
-  const onTackle = useCallback(
-    () => setMessage("Защитник отобрал мяч! Нажми R и попробуй обойти его."),
-    [],
-  );
+  const onTackle = useCallback((distance: string) => {
+    setMessage(`Соперник отобрал мяч и бьёт с ${distance} дистанции!`);
+  }, []);
+  const onConcede = useCallback((scored: boolean) => {
+    setMessage(scored ? "Соперник забил. Возвращаем мяч в игру…" : "Ваш вратарь спас ворота!");
+  }, []);
   const onAttempt = useCallback((scored: boolean) => {
     if (penalty) shootout.recordPlayerShot(scored);
     else setAttempts((value) => value + 1);
   }, [penalty, shootout.recordPlayerShot]);
   const sceneEvents = useMemo(
-    () => ({ onGoal, onMiss, onTackle, onAttempt, onStats: setPower, onStamina: setStamina }),
-    [onGoal, onMiss, onTackle, onAttempt],
+    () => ({ onGoal, onMiss, onTackle, onConcede, onAttempt, onStats: setPower, onStamina: setStamina }),
+    [onGoal, onMiss, onTackle, onConcede, onAttempt],
   );
 
   useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey);

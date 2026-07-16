@@ -111,15 +111,15 @@ export const createFootballer = (
   return player;
 };
 
-const addGoal = (scene: THREE.Scene) => {
+const addGoal = (scene: THREE.Scene, z: number, facesNorth = true) => {
   const material = new THREE.MeshStandardMaterial({ color: "#f5f4e9" });
   [-5, 5].forEach((x) => {
     const post = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 0.2), material);
-    post.position.set(x, 2, GOAL_Z);
+    post.position.set(x, 2, z);
     scene.add(post);
   });
   const bar = new THREE.Mesh(new THREE.BoxGeometry(10.2, 0.2, 0.2), material);
-  bar.position.set(0, 3.95, GOAL_Z);
+  bar.position.set(0, 3.95, z);
   scene.add(bar);
   const net = new THREE.Mesh(
     new THREE.PlaneGeometry(10, 3.8, 10, 6),
@@ -130,7 +130,8 @@ const addGoal = (scene: THREE.Scene) => {
       opacity: 0.55,
     }),
   );
-  net.position.set(0, 1.4, GOAL_Z - 0.25);
+  net.position.set(0, 1.4, z + (facesNorth ? -0.25 : 0.25));
+  if (!facesNorth) net.rotation.y = Math.PI;
   scene.add(net);
 };
 
@@ -171,7 +172,8 @@ export const addDayStadium = (scene: THREE.Scene) => {
   const sunlight = new THREE.DirectionalLight("#fff2cf", 3.4);
   sunlight.position.set(-12, 22, 10);
   scene.add(sunlight);
-  addGoal(scene);
+  addGoal(scene, GOAL_Z);
+  addGoal(scene, -GOAL_Z, false);
   const standMaterial = new THREE.MeshStandardMaterial({
     color: "#142337",
     roughness: 0.9,
