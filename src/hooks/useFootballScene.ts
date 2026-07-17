@@ -290,8 +290,8 @@ export function useFootballScene(
       const { width, height } = mount.getBoundingClientRect();
       renderer.setSize(width, height);
       camera.aspect = width / height;
-      if (camera.aspect < 0.8) camera.position.set(0, 48, 48);
-      else camera.position.set(0, 32, 42);
+      if (camera.aspect < 0.8) camera.position.set(0, 34, 48);
+      else camera.position.set(0, 22, 42);
       camera.lookAt(0, 0, -5);
       camera.updateProjectionMatrix();
     };
