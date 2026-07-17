@@ -30,7 +30,7 @@ export function useFootballScene(
     if (!mount) return;
     const scene = new THREE.Scene();
     addDayStadium(scene);
-    const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 180);
+    const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 180);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -290,8 +290,8 @@ export function useFootballScene(
       const { width, height } = mount.getBoundingClientRect();
       renderer.setSize(width, height);
       camera.aspect = width / height;
-      if (camera.aspect < 0.8) camera.position.set(-48, 62, 64);
-      else camera.position.set(-32, 30, 34);
+      if (camera.aspect < 0.8) camera.position.set(-52, 48, 0);
+      else camera.position.set(-34, 19, 0);
       camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
     };
