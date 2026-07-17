@@ -51,7 +51,7 @@ export function useFootballScene(
     homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
     homeGoalkeeper.rotation.y = Math.PI;
     scene.add(homeGoalkeeper);
-    const defenderPositions = [[-5, 14], [5, 4], [-3, -8]];
+    const defenderPositions = [[-6, -4], [5, -8], [-2, -12]];
     const defenders = penalty ? [] : defenderPositions.map(([x, z], index) => {
       const defender = createFootballer("defender", String(index + 4));
       defender.position.set(x, 0.1, z);

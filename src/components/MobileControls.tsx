@@ -1,8 +1,7 @@
-type Props = { penalty: boolean };
+import MobileJoystick from "./MobileJoystick";
+import { sendMobileKey } from "../lib/mobileInput";
 
-const sendKey = (code: string, pressed: boolean) => {
-  window.dispatchEvent(new KeyboardEvent(pressed ? "keydown" : "keyup", { code }));
-};
+type Props = { penalty: boolean };
 
 type ControlButtonProps = {
   code: string;
@@ -11,7 +10,7 @@ type ControlButtonProps = {
 };
 
 function ControlButton({ code, label, className = "" }: ControlButtonProps) {
-  const release = () => sendKey(code, false);
+  const release = () => sendMobileKey(code, false);
   return (
     <button
       className={className}
@@ -23,7 +22,7 @@ function ControlButton({ code, label, className = "" }: ControlButtonProps) {
       onPointerDown={(event) => {
         event.preventDefault();
         event.currentTarget.setPointerCapture(event.pointerId);
-        sendKey(code, true);
+        sendMobileKey(code, true);
       }}
       onPointerUp={release}
       type="button"
@@ -36,12 +35,9 @@ function ControlButton({ code, label, className = "" }: ControlButtonProps) {
 export default function MobileControls({ penalty }: Props) {
   return (
     <section className="mobile-controls" aria-label="Сенсорное управление">
-      <div className="mobile-controls__move">
-        {!penalty && <ControlButton code="KeyW" label="▲" className="move-up" />}
-        <ControlButton code="KeyA" label="◀" className="move-left" />
+      <div className="mobile-controls__movement">
+        <MobileJoystick />
         {!penalty && <ControlButton code="KeyQ" label="БЕГ" className="move-sprint" />}
-        <ControlButton code="KeyD" label="▶" className="move-right" />
-        {!penalty && <ControlButton code="KeyS" label="▼" className="move-down" />}
       </div>
       <div className="mobile-controls__actions">
         {!penalty && <ControlButton code="KeyE" label="ПАС" />}
