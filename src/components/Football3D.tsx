@@ -64,7 +64,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
         </div>
       </header>
       <section className="three-game__brief">
-        <span>ДНЕВНОЙ СТАДИОН · КАМЕРА ОТ ТРЕТЬЕГО ЛИЦА</span>
+        <span>ДНЕВНОЙ СТАДИОН · ТЕЛЕВИЗИОННАЯ КАМЕРА</span>
         <p>{shownMessage}</p>
       </section>
       <div

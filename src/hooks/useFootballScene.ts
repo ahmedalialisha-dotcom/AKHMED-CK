@@ -30,7 +30,7 @@ export function useFootballScene(
     if (!mount) return;
     const scene = new THREE.Scene();
     addDayStadium(scene);
-    const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 100);
+    const camera = new THREE.PerspectiveCamera(54, 1, 0.1, 180);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
@@ -283,16 +283,6 @@ export function useFootballScene(
       } else {
         activePlayer.position.y = .1;
       }
-      const cameraTarget = activePlayer.position
-        .clone()
-        .add(
-          new THREE.Vector3(0, 8.5, 12.5).applyAxisAngle(
-            new THREE.Vector3(0, 1, 0),
-            activePlayer.rotation.y,
-          ),
-        );
-      camera.position.lerp(cameraTarget, 0.09);
-      camera.lookAt(activePlayer.position.x, 1.1, activePlayer.position.z - 7.5);
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
     };
@@ -300,6 +290,9 @@ export function useFootballScene(
       const { width, height } = mount.getBoundingClientRect();
       renderer.setSize(width, height);
       camera.aspect = width / height;
+      if (camera.aspect < 0.8) camera.position.set(55, 70, 72);
+      else camera.position.set(38, 36, 40);
+      camera.lookAt(0, 0, 0);
       camera.updateProjectionMatrix();
     };
     const observer = new ResizeObserver(resize);
