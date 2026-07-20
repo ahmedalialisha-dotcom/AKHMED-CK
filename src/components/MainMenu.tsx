@@ -10,6 +10,7 @@ type Props = {
   player: string;
   userEmail?: string;
   onStart: (mode: string) => void;
+  onTournament: (name: string) => void;
   onScreen: (screen: NavigateScreen) => void;
   onPlayer: (name: string) => void;
 };

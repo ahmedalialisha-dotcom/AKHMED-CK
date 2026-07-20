@@ -1,26 +1,40 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFootballScene } from "../hooks/useFootballScene";
 import { usePenaltyShootout } from "../hooks/usePenaltyShootout";
 import { useDeviceMode } from "../hooks/useDeviceMode";
 import MobileControls from "./MobileControls";
 import "../football3d.css";
 
-type Props = { onExit: () => void; tournament: string; penalty?: boolean };
-export default function Football3D({ onExit, tournament, penalty = false }: Props) {
+type Props = { onExit: () => void; tournament: string; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
+export default function Football3D({ onExit, tournament, penalty = false, targetGoals, onMatchEnd }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState(
     "Веди мяч, не подпускай защитников и пробей мимо вратаря.",
   );
   const [goals, setGoals] = useState(0);
+  const [opponentGoals, setOpponentGoals] = useState(0);
+  const goalsRef = useRef(0);
+  const opponentGoalsRef = useRef(0);
   const [attempts, setAttempts] = useState(0);
   const [power, setPower] = useState(0);
   const [stamina, setStamina] = useState(100);
   const isPhone = useDeviceMode();
   const shootout = usePenaltyShootout();
+  const matchFinished = useRef(false);
+  const matchTimer = useRef(0);
+  useEffect(() => () => window.clearTimeout(matchTimer.current), []);
   const onGoal = useCallback(() => {
-    setGoals((current) => current + 1);
+    setGoals((current) => {
+      const next = current + 1;
+      goalsRef.current = next;
+      if (targetGoals && next >= targetGoals && !matchFinished.current) {
+        matchFinished.current = true;
+        matchTimer.current = window.setTimeout(() => onMatchEnd?.(true, next, opponentGoalsRef.current), 2000);
+      }
+      return next;
+    });
     setMessage("ГОООЛ! Следующий розыгрыш начнётся через 2 секунды.");
-  }, []);
+  }, [onMatchEnd, targetGoals]);
   const onMiss = useCallback(
     () => setMessage("Мимо ворот. Нажми R и выбери угол точнее."),
     [],
@@ -33,7 +47,16 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
   }, []);
   const onConcede = useCallback((scored: boolean) => {
     setMessage(scored ? "Соперник забил. Возвращаем мяч в игру…" : "Ваш вратарь спас ворота!");
-  }, []);
+    if (scored) setOpponentGoals((current) => {
+      const next = current + 1;
+      opponentGoalsRef.current = next;
+      if (targetGoals && next >= targetGoals && !matchFinished.current) {
+        matchFinished.current = true;
+        matchTimer.current = window.setTimeout(() => onMatchEnd?.(false, goalsRef.current, next), 2000);
+      }
+      return next;
+    });
+  }, [onMatchEnd, targetGoals]);
   const onAttempt = useCallback((scored: boolean) => {
     if (penalty) shootout.recordPlayerShot(scored);
     else setAttempts((value) => value + 1);
@@ -59,7 +82,7 @@ export default function Football3D({ onExit, tournament, penalty = false }: Prop
           <h1>{penalty ? 'Пенальти' : 'Повтори гол'}</h1>
         </div>
         <div className="goal-counter">
-          <span>{penalty ? `ВЫ ${shootout.playerGoals}:${shootout.opponentGoals} СОПЕРНИК · ${shootout.turn === "finished" ? "МАТЧ ОКОНЧЕН" : `ПОПЫТКА ${attemptLabel}`}` : `СЧЁТ ${goals} · ПОПЫТКА ${attempts + 1}`}</span>
+          <span>{penalty ? `ВЫ ${shootout.playerGoals}:${shootout.opponentGoals} СОПЕРНИК · ${shootout.turn === "finished" ? "МАТЧ ОКОНЧЕН" : `ПОПЫТКА ${attemptLabel}`}` : `СЧЁТ ${goals}:${opponentGoals}${targetGoals ? ` · ДО ${targetGoals} ГОЛОВ` : ` · ПОПЫТКА ${attempts + 1}`}`}</span>
           <strong>{shootout.turn === "finished" && shootout.playerGoals > shootout.opponentGoals ? '🏆' : shownGoals}</strong>
         </div>
       </header>
