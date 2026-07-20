@@ -8,7 +8,7 @@ type SceneEvents = {
   onGoal: () => void;
   onMiss: () => void;
   onTackle: (distance: "ближней" | "средней" | "дальней") => void;
-  onOpponentDribble: () => void;
+  onOpponentDribble: (fromRestart: boolean) => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
@@ -108,6 +108,29 @@ export function useFootballScene(
         defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]),
       );
       if (!penalty) { teammates[0].position.set(-8, 0.1, 11); teammates[1].position.set(8, 0.1, 2); }
+    };
+    const startOpponentPossession = () => {
+      player.position.set(0, 0.1, 14);
+      player.rotation.set(0, 0, 0);
+      teammates[0].position.set(-8, 0.1, 10);
+      teammates[1].position.set(8, 0.1, 4);
+      defenders.forEach((defender, index) =>
+        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]),
+      );
+      const carrier = defenders[1];
+      carrier.position.set(0, 0.1, -2);
+      ballVelocity.set(0, 0, 0);
+      ball.position.set(0, 0.35, -1.1);
+      hasBall = false;
+      activePlayer = player;
+      enemyCarrier = carrier;
+      enemyDribbleStarted = performance.now();
+      enemyShotTargetZ = HOME_GOAL_Z - [10, 21, 33][Math.floor(Math.random() * 3)];
+      enemyShot = false;
+      finished = false;
+      goalHandled = false;
+      celebrationUntil = 0;
+      events.onOpponentDribble(true);
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
@@ -233,7 +256,7 @@ export function useFootballScene(
             const shotDistances = [10, 21, 33];
             enemyShotTargetZ = HOME_GOAL_Z - shotDistances[Math.floor(Math.random() * shotDistances.length)];
             sounds.playTackle();
-            events.onOpponentDribble();
+            events.onOpponentDribble(false);
           }
         });
         goalkeeper.position.x = THREE.MathUtils.clamp(
@@ -274,8 +297,7 @@ export function useFootballScene(
           } else events.onMiss();
           if (!(onTarget && Math.abs(ball.position.x) < 4.5 && !saved)) events.onAttempt(false);
           if (!penalty) {
-            if (celebrationUntil) resetTimer = window.setTimeout(reset, 2000);
-            else reset();
+            resetTimer = window.setTimeout(startOpponentPossession, 2000);
           }
         }
       } else if (celebrationUntil > performance.now()) {

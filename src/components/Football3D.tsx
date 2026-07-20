@@ -33,17 +33,17 @@ export default function Football3D({ onExit, tournament, penalty = false, target
       }
       return next;
     });
-    setMessage("ГОООЛ! Следующий розыгрыш начнётся через 2 секунды.");
+    setMessage("ГОООЛ! Через 2 секунды атаку начнёт соперник.");
   }, [onMatchEnd, targetGoals]);
   const onMiss = useCallback(
-    () => setMessage("Мимо ворот. Нажми R и выбери угол точнее."),
+    () => setMessage("Мимо ворот. Через 2 секунды соперник начнёт атаку."),
     [],
   );
   const onTackle = useCallback((distance: string) => {
     setMessage(`Соперник завершил обводку и бьёт с ${distance} дистанции!`);
   }, []);
-  const onOpponentDribble = useCallback(() => {
-    setMessage("Соперник отобрал мяч, ускорился и идёт в обводку!");
+  const onOpponentDribble = useCallback((fromRestart: boolean) => {
+    setMessage(fromRestart ? "Соперник получил мяч и начинает атаку!" : "Соперник отобрал мяч, ускорился и идёт в обводку!");
   }, []);
   const onConcede = useCallback((scored: boolean) => {
     setMessage(scored ? "Соперник забил. Возвращаем мяч в игру…" : "Ваш вратарь спас ворота!");
