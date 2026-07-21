@@ -9,6 +9,7 @@ type SceneEvents = {
   onMiss: () => void;
   onTackle: (distance: "ближней" | "средней" | "дальней") => void;
   onOpponentDribble: (fromRestart: boolean) => void;
+  onBallWon: (success: boolean) => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
@@ -96,6 +97,8 @@ export function useFootballScene(
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
+    let lastTackleAttempt = 0;
+    let protectedUntil = 0;
     const reset = () => {
       player.position.set(0, 0.1, penalty ? -7 : 20);
       player.rotation.set(0, 0, 0);
@@ -142,7 +145,7 @@ export function useFootballScene(
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
-        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyC", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
+        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyC", "KeyX", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
       )
         event.preventDefault();
       sounds.startCrowd();
@@ -151,6 +154,20 @@ export function useFootballScene(
       if (event.code === "KeyC" && !penalty && (enemyCarrier || enemyShot)) {
         const currentIndex = teamPlayers.indexOf(activePlayer);
         activePlayer = teamPlayers[(currentIndex + 1) % teamPlayers.length];
+      }
+      if (event.code === "KeyX" && enemyCarrier && performance.now() - lastTackleAttempt > 500) {
+        lastTackleAttempt = performance.now();
+        const successful = activePlayer.position.distanceTo(enemyCarrier.position) < 1.35;
+        if (successful) {
+          activePlayer.position.lerp(enemyCarrier.position, 0.45);
+          enemyCarrier = undefined;
+          enemyShot = false;
+          hasBall = true;
+          ballVelocity.set(0, 0, 0);
+          protectedUntil = performance.now() + 1200;
+          sounds.playTackle();
+        }
+        events.onBallWon(successful);
       }
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
       if (event.code === "KeyE" && hasBall && !penalty) {
@@ -263,7 +280,7 @@ export function useFootballScene(
           if (chase.length() > 0.1)
             defender.position.addScaledVector(chase.normalize(), 3.25 * delta);
           defender.lookAt(target.x, defender.position.y, target.z);
-          if (hasBall && defender.position.distanceTo(activePlayer.position) < 0.86) {
+          if (hasBall && performance.now() > protectedUntil && defender.position.distanceTo(activePlayer.position) < 0.86) {
             hasBall = false;
             enemyCarrier = defender;
             enemyDribbleStarted = performance.now();
