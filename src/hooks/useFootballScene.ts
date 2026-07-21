@@ -10,6 +10,7 @@ type SceneEvents = {
   onTackle: (distance: "ближней" | "средней" | "дальней") => void;
   onOpponentDribble: (fromRestart: boolean) => void;
   onBallWon: () => void;
+  onOpponentPass: () => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
@@ -98,6 +99,8 @@ export function useFootballScene(
     let nextEnemyFeint = 0;
     let enemyFeintUntil = 0;
     let enemyFeintDirection = 1;
+    let enemyPassTarget: THREE.Group | undefined;
+    let nextEnemyPass = 0;
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
@@ -120,6 +123,7 @@ export function useFootballScene(
       activePlayer.position.lerp(carrier.position, 0.45);
       carrier.rotation.z = 0;
       enemyCarrier = undefined;
+      enemyPassTarget = undefined;
       enemyShot = false;
       hasBall = true;
       ballVelocity.set(0, 0, 0);
@@ -144,6 +148,7 @@ export function useFootballScene(
       enemyCarrier = undefined;
       enemyDribbleStarted = 0;
       nextEnemyFeint = 0;
+      nextEnemyPass = 0;
       enemyFeintUntil = 0;
       defenders.forEach((defender, index) => {
         defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]);
@@ -169,6 +174,7 @@ export function useFootballScene(
       enemyCarrier = carrier;
       enemyDribbleStarted = performance.now();
       nextEnemyFeint = performance.now() + THREE.MathUtils.randFloat(700, 1300);
+      nextEnemyPass = performance.now() + THREE.MathUtils.randFloat(1100, 1900);
       planEnemyShot(carrier.position.z);
       enemyShot = false;
       finished = false;
@@ -272,6 +278,24 @@ export function useFootballScene(
               enemyFeintDirection = Math.random() < 0.5 ? -1 : 1;
               nextEnemyFeint = now + THREE.MathUtils.randFloat(1200, 2200);
             }
+            if (now > nextEnemyPass) {
+              if (Math.random() < 0.62) {
+                const options = defenders.filter((defender) => defender !== carrier);
+                const target = options.sort((first, second) =>
+                  first.position.distanceTo(carrier.position) - second.position.distanceTo(carrier.position),
+                )[0];
+                if (target) {
+                  enemyPassTarget = target;
+                  enemyCarrier = undefined;
+                  ballVelocity.copy(target.position.clone().sub(ball.position).normalize().multiplyScalar(0.72));
+                  ballVelocity.y = 0.035;
+                  carrier.rotation.z = 0;
+                  sounds.playKick();
+                  events.onOpponentPass();
+                }
+              }
+              nextEnemyPass = now + THREE.MathUtils.randFloat(1300, 2400);
+            }
             const feinting = now < enemyFeintUntil;
             const weave = Math.sin(now / 230) * 1.8 + (feinting ? enemyFeintDirection * 2.3 : 0);
             carrier.position.z += (feinting ? 4.1 : 5.4) * delta;
@@ -305,9 +329,33 @@ export function useFootballScene(
           }
           ball.rotation.x += 0.22;
           if (passTarget && ball.position.distanceTo(passTarget.position) < 0.9) { activePlayer = passTarget; hasBall = true; passTarget = undefined; }
+          if (enemyPassTarget && activePlayer.position.distanceTo(ball.position) < 0.82) {
+            enemyPassTarget = undefined;
+            ballVelocity.set(0, 0, 0);
+            hasBall = true;
+            protectedUntil = performance.now() + 1000;
+            events.onBallWon();
+          } else if (enemyPassTarget && ball.position.distanceTo(enemyPassTarget.position) < 0.9) {
+            enemyCarrier = enemyPassTarget;
+            enemyPassTarget = undefined;
+            ballVelocity.set(0, 0, 0);
+            enemyDribbleStarted = performance.now();
+            nextEnemyFeint = performance.now() + THREE.MathUtils.randFloat(700, 1300);
+            nextEnemyPass = performance.now() + THREE.MathUtils.randFloat(1100, 1900);
+            planEnemyShot(enemyCarrier.position.z);
+          }
         }
         defenders.forEach((defender) => {
-          if (enemyShot || enemyCarrier) return;
+          if (enemyShot || enemyPassTarget) return;
+          if (enemyCarrier) {
+            if (defender !== enemyCarrier) {
+              const side = defenders.indexOf(defender) % 2 ? 1 : -1;
+              const support = new THREE.Vector3(side * 4.5, 0.1, enemyCarrier.position.z - 3.5);
+              const movement = support.sub(defender.position).setY(0);
+              if (movement.length() > 0.2) defender.position.addScaledVector(movement.normalize(), 3.1 * delta);
+            }
+            return;
+          }
           const target = hasBall ? activePlayer.position : ball.position;
           const chase = target.clone().sub(defender.position).setY(0);
           if (chase.length() > 0.1)
@@ -318,6 +366,7 @@ export function useFootballScene(
             enemyCarrier = defender;
             enemyDribbleStarted = performance.now();
             nextEnemyFeint = performance.now() + THREE.MathUtils.randFloat(700, 1300);
+            nextEnemyPass = performance.now() + THREE.MathUtils.randFloat(1100, 1900);
             planEnemyShot(defender.position.z);
             sounds.playTackle();
             events.onOpponentDribble(false);

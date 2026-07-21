@@ -48,6 +48,9 @@ export default function Football3D({ onExit, tournament, penalty = false, target
   const onBallWon = useCallback(() => {
     setMessage("Автоматический отбор! Мяч снова у вашей команды.");
   }, []);
+  const onOpponentPass = useCallback(() => {
+    setMessage("Соперники разыгрывают мяч в пас — попробуйте перехватить!");
+  }, []);
   const onConcede = useCallback((scored: boolean) => {
     setMessage(scored ? "Соперник забил. Возвращаем мяч в игру…" : "Ваш вратарь спас ворота!");
     if (scored) setOpponentGoals((current) => {
@@ -65,8 +68,8 @@ export default function Football3D({ onExit, tournament, penalty = false, target
     else setAttempts((value) => value + 1);
   }, [penalty, shootout.recordPlayerShot]);
   const sceneEvents = useMemo(
-    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onConcede, onAttempt, onStats: setPower, onStamina: setStamina }),
-    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onConcede, onAttempt],
+    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onConcede, onAttempt, onStats: setPower, onStamina: setStamina }),
+    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onConcede, onAttempt],
   );
 
   useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey);
