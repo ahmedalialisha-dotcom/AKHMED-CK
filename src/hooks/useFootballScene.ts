@@ -227,7 +227,7 @@ export function useFootballScene(
         }
         else if (enemyCarrier) {
           const weave = Math.sin(performance.now() / 230) * 1.8;
-          enemyCarrier.position.z += 6.6 * delta;
+          enemyCarrier.position.z += 5.4 * delta;
           enemyCarrier.position.x += (weave - enemyCarrier.position.x) * 1.9 * delta;
           enemyCarrier.rotation.y = Math.PI;
           ball.position.set(
@@ -261,9 +261,9 @@ export function useFootballScene(
           const target = hasBall ? activePlayer.position : ball.position;
           const chase = target.clone().sub(defender.position).setY(0);
           if (chase.length() > 0.1)
-            defender.position.addScaledVector(chase.normalize(), 4.4 * delta);
+            defender.position.addScaledVector(chase.normalize(), 3.25 * delta);
           defender.lookAt(target.x, defender.position.y, target.z);
-          if (hasBall && defender.position.distanceTo(activePlayer.position) < 1.05) {
+          if (hasBall && defender.position.distanceTo(activePlayer.position) < 0.86) {
             hasBall = false;
             enemyCarrier = defender;
             enemyDribbleStarted = performance.now();

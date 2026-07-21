@@ -1,5 +1,6 @@
 import * as THREE from "three";
-import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
+import { FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
+import { addFootballPitch } from "./footballPitch";
 
 const createNumber = (value: string) => {
   const canvas = document.createElement("canvas");
@@ -144,30 +145,8 @@ export const addDayStadium = (scene: THREE.Scene) => {
   );
   grass.receiveShadow = true;
   scene.add(grass);
-  const line = new THREE.LineLoop(
-    new THREE.BufferGeometry().setFromPoints([
-      new THREE.Vector3(-FIELD_HALF_WIDTH + 0.3, 0.14, -FIELD_HALF_LENGTH + 0.3),
-      new THREE.Vector3(FIELD_HALF_WIDTH - 0.3, 0.14, -FIELD_HALF_LENGTH + 0.3),
-      new THREE.Vector3(FIELD_HALF_WIDTH - 0.3, 0.14, FIELD_HALF_LENGTH - 0.3),
-      new THREE.Vector3(-FIELD_HALF_WIDTH + 0.3, 0.14, FIELD_HALF_LENGTH - 0.3),
-    ]),
-    new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
-  );
-  scene.add(line);
-  const circle = new THREE.LineLoop(
-    new THREE.BufferGeometry().setFromPoints(
-      Array.from({ length: 32 }, (_, index) => {
-        const angle = (index / 32) * Math.PI * 2;
-        return new THREE.Vector3(
-          Math.cos(angle) * 3.2,
-          0.15,
-          Math.sin(angle) * 3.2,
-        );
-      }),
-    ),
-    new THREE.LineBasicMaterial({ color: "#dbe9d9" }),
-  );
-  scene.add(circle, new THREE.HemisphereLight("#e7f6ff", "#28613e", 1.8));
+  addFootballPitch(scene);
+  scene.add(new THREE.HemisphereLight("#e7f6ff", "#28613e", 1.8));
   scene.add(new THREE.AmbientLight("#ffffff", 1.25));
   const sunlight = new THREE.DirectionalLight("#fff2cf", 3.4);
   sunlight.position.set(-12, 22, 10);
