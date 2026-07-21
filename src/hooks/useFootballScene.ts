@@ -95,6 +95,9 @@ export function useFootballScene(
     let enemyDribbleStarted = 0;
     let enemyShotTargetZ = 0;
     let enemyDribbleDuration = 950;
+    let nextEnemyFeint = 0;
+    let enemyFeintUntil = 0;
+    let enemyFeintDirection = 1;
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
@@ -114,6 +117,17 @@ export function useFootballScene(
       enemyShotTargetZ = Math.min(HOME_GOAL_Z - 3, Math.max(carrierZ + 1.5, plannedZ));
       enemyDribbleDuration = 950;
     };
+    const winBall = (carrier: THREE.Group) => {
+      activePlayer.position.lerp(carrier.position, 0.45);
+      carrier.rotation.z = 0;
+      enemyCarrier = undefined;
+      enemyShot = false;
+      hasBall = true;
+      ballVelocity.set(0, 0, 0);
+      protectedUntil = performance.now() + 1200;
+      sounds.playTackle();
+      events.onBallWon(true);
+    };
     const reset = () => {
       player.position.set(0, 0.1, penalty ? -7 : 20);
       player.rotation.set(0, 0, 0);
@@ -130,9 +144,12 @@ export function useFootballScene(
       enemyShot = false;
       enemyCarrier = undefined;
       enemyDribbleStarted = 0;
-      defenders.forEach((defender, index) =>
-        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]),
-      );
+      nextEnemyFeint = 0;
+      enemyFeintUntil = 0;
+      defenders.forEach((defender, index) => {
+        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]);
+        defender.rotation.set(0, 0, 0);
+      });
       if (!penalty) { teammates[0].position.set(-8, 0.1, 11); teammates[1].position.set(8, 0.1, 2); }
     };
     const startOpponentPossession = () => {
@@ -140,9 +157,10 @@ export function useFootballScene(
       player.rotation.set(0, 0, 0);
       teammates[0].position.set(-8, 0.1, 10);
       teammates[1].position.set(8, 0.1, 4);
-      defenders.forEach((defender, index) =>
-        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]),
-      );
+      defenders.forEach((defender, index) => {
+        defender.position.set(defenderPositions[index][0], 0.1, defenderPositions[index][1]);
+        defender.rotation.set(0, 0, 0);
+      });
       const carrier = defenders[1];
       carrier.position.set(0, 0.1, -2);
       ballVelocity.set(0, 0, 0);
@@ -151,6 +169,7 @@ export function useFootballScene(
       activePlayer = player;
       enemyCarrier = carrier;
       enemyDribbleStarted = performance.now();
+      nextEnemyFeint = performance.now() + THREE.MathUtils.randFloat(700, 1300);
       planEnemyShot(carrier.position.z);
       enemyShot = false;
       finished = false;
@@ -173,16 +192,8 @@ export function useFootballScene(
       if (event.code === "KeyX" && enemyCarrier && performance.now() - lastTackleAttempt > 500) {
         lastTackleAttempt = performance.now();
         const successful = activePlayer.position.distanceTo(enemyCarrier.position) < 1.35;
-        if (successful) {
-          activePlayer.position.lerp(enemyCarrier.position, 0.45);
-          enemyCarrier = undefined;
-          enemyShot = false;
-          hasBall = true;
-          ballVelocity.set(0, 0, 0);
-          protectedUntil = performance.now() + 1200;
-          sounds.playTackle();
-        }
-        events.onBallWon(successful);
+        if (successful) winBall(enemyCarrier);
+        else events.onBallWon(false);
       }
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
       if (event.code === "KeyE" && hasBall && !penalty) {
@@ -258,19 +269,33 @@ export function useFootballScene(
             .setY(0.35);
         }
         else if (enemyCarrier) {
-          const weave = Math.sin(performance.now() / 230) * 1.8;
-          enemyCarrier.position.z += 5.4 * delta;
-          enemyCarrier.position.x += (weave - enemyCarrier.position.x) * 1.9 * delta;
-          enemyCarrier.rotation.y = Math.PI;
-          ball.position.set(
-            enemyCarrier.position.x + Math.sin(performance.now() / 90) * 0.28,
-            0.35,
-            enemyCarrier.position.z + 0.9,
-          );
+          const carrier = enemyCarrier;
+          if (activePlayer.position.distanceTo(carrier.position) < 0.78) {
+            winBall(carrier);
+          } else {
+            const now = performance.now();
+            if (now > nextEnemyFeint) {
+              enemyFeintUntil = now + 430;
+              enemyFeintDirection = Math.random() < 0.5 ? -1 : 1;
+              nextEnemyFeint = now + THREE.MathUtils.randFloat(1200, 2200);
+            }
+            const feinting = now < enemyFeintUntil;
+            const weave = Math.sin(now / 230) * 1.8 + (feinting ? enemyFeintDirection * 2.3 : 0);
+            carrier.position.z += (feinting ? 4.1 : 5.4) * delta;
+            carrier.position.x += (weave - carrier.position.x) * 1.9 * delta;
+            carrier.rotation.y = Math.PI + (feinting ? enemyFeintDirection * 0.32 : 0);
+            carrier.rotation.z = feinting ? enemyFeintDirection * 0.13 : 0;
+            ball.position.set(
+              carrier.position.x + Math.sin(now / 75) * (feinting ? 0.55 : 0.28),
+              0.35,
+              carrier.position.z + 0.9,
+            );
+          }
           const dribbledLongEnough = performance.now() - enemyDribbleStarted > enemyDribbleDuration;
-          if (dribbledLongEnough && enemyCarrier.position.z >= enemyShotTargetZ) {
+          if (enemyCarrier && dribbledLongEnough && enemyCarrier.position.z >= enemyShotTargetZ) {
             const distance = HOME_GOAL_Z - enemyCarrier.position.z;
             const targetX = THREE.MathUtils.randFloat(-3.2, 3.2);
+            enemyCarrier.rotation.z = 0;
             enemyCarrier = undefined;
             enemyShot = true;
             ballVelocity.set(targetX - ball.position.x, 0, distance).normalize().multiplyScalar(distance > 24 ? 1.3 : distance > 13 ? 1.2 : 1.08);
@@ -299,6 +324,7 @@ export function useFootballScene(
             hasBall = false;
             enemyCarrier = defender;
             enemyDribbleStarted = performance.now();
+            nextEnemyFeint = performance.now() + THREE.MathUtils.randFloat(700, 1300);
             planEnemyShot(defender.position.z);
             sounds.playTackle();
             events.onOpponentDribble(false);
