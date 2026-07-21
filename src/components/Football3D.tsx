@@ -45,8 +45,8 @@ export default function Football3D({ onExit, tournament, penalty = false, target
   const onOpponentDribble = useCallback((fromRestart: boolean) => {
     setMessage(fromRestart ? "Соперник получил мяч и начинает атаку!" : "Соперник отобрал мяч, ускорился и идёт в обводку!");
   }, []);
-  const onBallWon = useCallback((success: boolean) => {
-    setMessage(success ? "Отличный отбор! Мяч снова у вашей команды." : "Слишком далеко для отбора — подойдите ближе.");
+  const onBallWon = useCallback(() => {
+    setMessage("Автоматический отбор! Мяч снова у вашей команды.");
   }, []);
   const onConcede = useCallback((scored: boolean) => {
     setMessage(scored ? "Соперник забил. Возвращаем мяч в игру…" : "Ваш вратарь спас ворота!");
@@ -113,7 +113,6 @@ export default function Football3D({ onExit, tournament, penalty = false, target
             держи <kbd>Space</kbd> сила удара · <kbd>E</kbd> пас · <kbd>R</kbd> заново
           </p>
           {!penalty && <p><kbd>C</kbd> переключить игрока в защите</p>}
-          {!penalty && <p><kbd>X</kbd> отобрать мяч рядом с соперником</p>}
           <p>
             <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> три разных финта
           </p>

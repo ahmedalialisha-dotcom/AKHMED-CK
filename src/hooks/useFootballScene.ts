@@ -9,7 +9,7 @@ type SceneEvents = {
   onMiss: () => void;
   onTackle: (distance: "ближней" | "средней" | "дальней") => void;
   onOpponentDribble: (fromRestart: boolean) => void;
-  onBallWon: (success: boolean) => void;
+  onBallWon: () => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
@@ -101,7 +101,6 @@ export function useFootballScene(
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
-    let lastTackleAttempt = 0;
     let protectedUntil = 0;
     const planEnemyShot = (carrierZ: number) => {
       const roll = Math.random();
@@ -126,7 +125,7 @@ export function useFootballScene(
       ballVelocity.set(0, 0, 0);
       protectedUntil = performance.now() + 1200;
       sounds.playTackle();
-      events.onBallWon(true);
+      events.onBallWon();
     };
     const reset = () => {
       player.position.set(0, 0.1, penalty ? -7 : 20);
@@ -179,7 +178,7 @@ export function useFootballScene(
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
-        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyC", "KeyX", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
+        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyC", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
       )
         event.preventDefault();
       sounds.startCrowd();
@@ -188,12 +187,6 @@ export function useFootballScene(
       if (event.code === "KeyC" && !penalty && (enemyCarrier || enemyShot)) {
         const currentIndex = teamPlayers.indexOf(activePlayer);
         activePlayer = teamPlayers[(currentIndex + 1) % teamPlayers.length];
-      }
-      if (event.code === "KeyX" && enemyCarrier && performance.now() - lastTackleAttempt > 500) {
-        lastTackleAttempt = performance.now();
-        const successful = activePlayer.position.distanceTo(enemyCarrier.position) < 1.35;
-        if (successful) winBall(enemyCarrier);
-        else events.onBallWon(false);
       }
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
       if (event.code === "KeyE" && hasBall && !penalty) {
@@ -270,7 +263,7 @@ export function useFootballScene(
         }
         else if (enemyCarrier) {
           const carrier = enemyCarrier;
-          if (activePlayer.position.distanceTo(carrier.position) < 0.78) {
+          if (activePlayer.position.distanceTo(carrier.position) < 1.05) {
             winBall(carrier);
           } else {
             const now = performance.now();
