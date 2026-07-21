@@ -94,11 +94,26 @@ export function useFootballScene(
     let enemyCarrier: THREE.Group | undefined;
     let enemyDribbleStarted = 0;
     let enemyShotTargetZ = 0;
+    let enemyDribbleDuration = 950;
     let stamina = 100;
     let statsTimer = 0;
     let resetTimer = 0;
     let lastTackleAttempt = 0;
     let protectedUntil = 0;
+    const planEnemyShot = (carrierZ: number) => {
+      const roll = Math.random();
+      if (roll < 0.05) {
+        enemyShotTargetZ = carrierZ;
+        enemyDribbleDuration = 280;
+        return;
+      }
+      const desiredDistance = roll < 0.18
+        ? THREE.MathUtils.randFloat(16, 21)
+        : THREE.MathUtils.randFloat(7, 11);
+      const plannedZ = HOME_GOAL_Z - desiredDistance;
+      enemyShotTargetZ = Math.min(HOME_GOAL_Z - 3, Math.max(carrierZ + 1.5, plannedZ));
+      enemyDribbleDuration = 950;
+    };
     const reset = () => {
       player.position.set(0, 0.1, penalty ? -7 : 20);
       player.rotation.set(0, 0, 0);
@@ -136,7 +151,7 @@ export function useFootballScene(
       activePlayer = player;
       enemyCarrier = carrier;
       enemyDribbleStarted = performance.now();
-      enemyShotTargetZ = HOME_GOAL_Z - [10, 21, 33][Math.floor(Math.random() * 3)];
+      planEnemyShot(carrier.position.z);
       enemyShot = false;
       finished = false;
       goalHandled = false;
@@ -252,16 +267,16 @@ export function useFootballScene(
             0.35,
             enemyCarrier.position.z + 0.9,
           );
-          const dribbledLongEnough = performance.now() - enemyDribbleStarted > 950;
+          const dribbledLongEnough = performance.now() - enemyDribbleStarted > enemyDribbleDuration;
           if (dribbledLongEnough && enemyCarrier.position.z >= enemyShotTargetZ) {
             const distance = HOME_GOAL_Z - enemyCarrier.position.z;
             const targetX = THREE.MathUtils.randFloat(-3.2, 3.2);
             enemyCarrier = undefined;
             enemyShot = true;
-            ballVelocity.set(targetX - ball.position.x, 0, distance).normalize().multiplyScalar(distance > 28 ? 1.3 : distance > 16 ? 1.2 : 1.08);
-            ballVelocity.y = distance > 28 ? 0.21 : distance > 16 ? 0.17 : 0.13;
+            ballVelocity.set(targetX - ball.position.x, 0, distance).normalize().multiplyScalar(distance > 24 ? 1.3 : distance > 13 ? 1.2 : 1.08);
+            ballVelocity.y = distance > 24 ? 0.21 : distance > 13 ? 0.17 : 0.13;
             sounds.playKick();
-            events.onTackle(distance > 28 ? "дальней" : distance > 16 ? "средней" : "ближней");
+            events.onTackle(distance > 24 ? "дальней" : distance > 13 ? "средней" : "ближней");
           }
         } else {
           ball.position.add(ballVelocity);
@@ -284,8 +299,7 @@ export function useFootballScene(
             hasBall = false;
             enemyCarrier = defender;
             enemyDribbleStarted = performance.now();
-            const shotDistances = [10, 21, 33];
-            enemyShotTargetZ = HOME_GOAL_Z - shotDistances[Math.floor(Math.random() * shotDistances.length)];
+            planEnemyShot(defender.position.z);
             sounds.playTackle();
             events.onOpponentDribble(false);
           }
