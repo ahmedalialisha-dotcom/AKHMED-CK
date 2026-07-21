@@ -109,6 +109,7 @@ export default function Football3D({ onExit, tournament, penalty = false, target
           <p>
             держи <kbd>Space</kbd> сила удара · <kbd>E</kbd> пас · <kbd>R</kbd> заново
           </p>
+          {!penalty && <p><kbd>C</kbd> переключить игрока в защите</p>}
           <p>
             <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> три разных финта
           </p>

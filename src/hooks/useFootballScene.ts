@@ -44,6 +44,14 @@ export function useFootballScene(
       teammates[1].position.set(8, 0.1, 2);
       scene.add(...teammates);
     }
+    const teamPlayers = [player, ...teammates];
+    const selectionRing = new THREE.Mesh(
+      new THREE.RingGeometry(0.58, 0.76, 28),
+      new THREE.MeshBasicMaterial({ color: "#f6d447", side: THREE.DoubleSide }),
+    );
+    selectionRing.rotation.x = -Math.PI / 2;
+    selectionRing.position.y = 0.18;
+    scene.add(selectionRing);
     const goalkeeper = createFootballer("keeper");
     goalkeeper.position.set(0, 0.1, KEEPER_Z);
     scene.add(goalkeeper);
@@ -134,12 +142,16 @@ export function useFootballScene(
     };
     const onKeyDown = (event: KeyboardEvent) => {
       if (
-        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
+        ["Space", "KeyF", "KeyG", "KeyH", "KeyQ", "KeyW", "KeyA", "KeyS", "KeyD", "KeyE", "KeyC", "KeyR", "Digit1", "Digit2", "Digit3"].includes(event.code)
       )
         event.preventDefault();
       sounds.startCrowd();
       keys.add(event.code);
       if (event.code === "KeyR" && canShootRef.current) reset();
+      if (event.code === "KeyC" && !penalty && (enemyCarrier || enemyShot)) {
+        const currentIndex = teamPlayers.indexOf(activePlayer);
+        activePlayer = teamPlayers[(currentIndex + 1) % teamPlayers.length];
+      }
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
       if (event.code === "KeyE" && hasBall && !penalty) {
         const target = teammates.filter((teammate) => teammate !== activePlayer).sort((first, second) => first.position.distanceTo(activePlayer.position) - second.position.distanceTo(activePlayer.position))[0];
@@ -184,6 +196,8 @@ export function useFootballScene(
           item.position.y = item.userData.fanBaseY + Math.max(0, Math.sin(performance.now() / 240 + item.userData.fanPhase)) * .22;
         }
       });
+      selectionRing.position.x = activePlayer.position.x;
+      selectionRing.position.z = activePlayer.position.z;
       if (!finished) {
         const sprinting = keys.has("KeyQ") && keys.has("KeyW") && stamina > 0;
         stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 : 7) * delta, 0, 100);
