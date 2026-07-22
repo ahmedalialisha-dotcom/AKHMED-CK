@@ -3,6 +3,7 @@ import * as THREE from "three";
 import { createGameSounds } from "../lib/footballAudio";
 import { addDayStadium, createFootballer } from "../lib/footballStadium";
 import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, HOME_GOAL_Z, HOME_KEEPER_Z, KEEPER_Z } from "../lib/footballField";
+import { moveToPosition, opponentAttackPosition, opponentDefensePosition, teamAttackPosition, teamDefensePosition } from "../lib/footballPositioning";
 
 type SceneEvents = {
   onGoal: () => void;
@@ -256,6 +257,12 @@ export function useFootballScene(
           activePlayer.position.addScaledVector(forward, -3.8 * delta);
         activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -FIELD_HALF_WIDTH + 1.5, FIELD_HALF_WIDTH - 1.5);
         activePlayer.position.z = THREE.MathUtils.clamp(activePlayer.position.z, -FIELD_HALF_LENGTH + 2, FIELD_HALF_LENGTH - 2);
+        const opponentPossession = Boolean(enemyCarrier || enemyPassTarget || enemyShot);
+        teamPlayers.forEach((teammate, index) => {
+          if (teammate === activePlayer || penalty) return;
+          if (hasBall) moveToPosition(teammate, teamAttackPosition(index, activePlayer), 3.8, delta);
+          else if (opponentPossession) moveToPosition(teammate, teamDefensePosition(index, ball.position.x), 4.2, delta);
+        });
         if (hasBall) {
           const baseFoot = keys.has("KeyA") ? -0.27 : keys.has("KeyD") ? 0.27 : Math.sin(performance.now() / 110) * 0.16;
           const feintOffset = performance.now() < feintUntil && feintStyle === 2 ? Math.sin(performance.now() / 35) * .55 : 0;
@@ -345,21 +352,24 @@ export function useFootballScene(
             planEnemyShot(enemyCarrier.position.z);
           }
         }
-        defenders.forEach((defender) => {
+        const pressingDefender = defenders.reduce<THREE.Group | undefined>((nearest, defender) => {
+          if (!nearest) return defender;
+          const target = hasBall ? activePlayer.position : ball.position;
+          return defender.position.distanceTo(target) < nearest.position.distanceTo(target) ? defender : nearest;
+        }, undefined);
+        defenders.forEach((defender, defenderIndex) => {
           if (enemyShot || enemyPassTarget) return;
           if (enemyCarrier) {
             if (defender !== enemyCarrier) {
-              const side = defenders.indexOf(defender) % 2 ? 1 : -1;
-              const support = new THREE.Vector3(side * 4.5, 0.1, enemyCarrier.position.z - 3.5);
-              const movement = support.sub(defender.position).setY(0);
-              if (movement.length() > 0.2) defender.position.addScaledVector(movement.normalize(), 3.1 * delta);
+              moveToPosition(defender, opponentAttackPosition(defenderIndex, enemyCarrier), 3.5, delta);
             }
             return;
           }
           const target = hasBall ? activePlayer.position : ball.position;
           const chase = target.clone().sub(defender.position).setY(0);
-          if (chase.length() > 0.1)
+          if (defender === pressingDefender && chase.length() > 0.1)
             defender.position.addScaledVector(chase.normalize(), 3.25 * delta);
+          else moveToPosition(defender, opponentDefensePosition(defenderIndex, target.x), 3, delta);
           defender.lookAt(target.x, defender.position.y, target.z);
           if (hasBall && performance.now() > protectedUntil && defender.position.distanceTo(activePlayer.position) < 0.86) {
             hasBall = false;
