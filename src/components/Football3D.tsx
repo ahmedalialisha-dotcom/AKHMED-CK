@@ -93,7 +93,7 @@ export default function Football3D({ onExit, tournament, penalty = false, target
         </div>
       </header>
       <section className="three-game__brief">
-        <span>ДНЕВНОЙ СТАДИОН · ТЕЛЕВИЗИОННАЯ КАМЕРА</span>
+        <span>БОЛЬШОЙ ДНЕВНОЙ СТАДИОН · 11 НА 11 · ДИНАМИЧЕСКАЯ КАМЕРА</span>
         <p>{shownMessage}</p>
       </section>
       <div

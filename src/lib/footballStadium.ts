@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
+import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
 import { addFootballPitch } from "./footballPitch";
 
 const createNumber = (value: string) => {
@@ -147,7 +147,7 @@ export const addDayStadium = (scene: THREE.Scene) => {
   for (let part = 0; part < 8; part += 1) {
     const angle = Math.PI * .15 + (part / 7) * Math.PI * .5;
     const stand = new THREE.Mesh(new THREE.BoxGeometry(10, 7, 8), standMaterial);
-    stand.position.set(Math.cos(angle) * 35, 3.2, -Math.abs(Math.sin(angle) * 35) - 8);
+    stand.position.set(Math.cos(angle) * 52, 3.2, -Math.abs(Math.sin(angle) * 52) - 8);
     stand.rotation.y = -angle;
     scene.add(stand);
   }
@@ -163,9 +163,9 @@ export const addDayStadium = (scene: THREE.Scene) => {
           }),
         );
         fan.position.set(
-          side * (17 + row * 0.65),
+          side * (FIELD_HALF_WIDTH + 1 + row * 0.65),
           1 + row * 0.72,
-          -27 + column * .9,
+          -FIELD_HALF_LENGTH - 1 + column * .9,
         );
         fan.userData.fanBaseY = fan.position.y;
         fan.userData.fanPhase = (row * 7 + column * 3 + side) * .45;
@@ -175,13 +175,13 @@ export const addDayStadium = (scene: THREE.Scene) => {
   fanColors.forEach((color, colorIndex) => {
     const positions: THREE.Matrix4[] = [];
     for (let row = 0; row < 7; row += 1)
-      for (let column = 0; column < 40; column += 1)
+      for (let column = 0; column < 60; column += 1)
         [-1, 1].forEach((side) => {
           if ((row + column) % fanColors.length !== colorIndex) return;
           positions.push(new THREE.Matrix4().makeTranslation(
-            side * (17.2 + row * 0.62),
+            side * (FIELD_HALF_WIDTH + 1.2 + row * 0.62),
             0.9 + row * 0.7,
-            -25.5 + column * 1.3,
+            -FIELD_HALF_LENGTH + 2 + column * 1.28,
           ));
         });
     const sideFans = new THREE.InstancedMesh(
@@ -194,10 +194,10 @@ export const addDayStadium = (scene: THREE.Scene) => {
     scene.add(sideFans);
   });
   [
-    [-18.5, -25],
-    [18.5, -25],
-    [-18.5, 25],
-    [18.5, 25],
+    [-24.5, -37],
+    [24.5, -37],
+    [-24.5, 37],
+    [24.5, 37],
   ].forEach(([x, z]) => {
     const pole = new THREE.Mesh(
       new THREE.CylinderGeometry(0.11, 0.11, 11),
