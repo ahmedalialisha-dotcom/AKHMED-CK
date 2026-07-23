@@ -41,7 +41,7 @@ export function useFootballScene(
     const player = createFootballer("star", "11");
     player.position.set(0, 0.1, penalty ? -7 : 20);
     scene.add(player);
-    const teammates = [createFootballer("star", "7"), createFootballer("star", "10")];
+    const teammates = [createFootballer("star", "7"), createFootballer("star", "8")];
     if (!penalty) {
       teammates[0].position.set(-8, 0.1, 11);
       teammates[1].position.set(8, 0.1, 2);

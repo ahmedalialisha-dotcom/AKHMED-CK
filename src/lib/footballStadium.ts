@@ -19,25 +19,8 @@ const createNumber = (value: string) => {
       transparent: true,
     }),
   );
-  sprite.position.set(0, 1.45, 0.52);
-  sprite.scale.set(0.65, 0.65, 1);
-  return sprite;
-};
-
-const createLabel = (value: string, y: number, size: number) => {
-  const canvas = document.createElement("canvas");
-  canvas.width = 256;
-  canvas.height = 64;
-  const drawing = canvas.getContext("2d");
-  if (drawing) {
-    drawing.fillStyle = "#167357";
-    drawing.font = "bold 30px Arial";
-    drawing.textAlign = "center";
-    drawing.fillText(value, 128, 42);
-  }
-  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
-  sprite.position.set(0, y, .54);
-  sprite.scale.set(size, size / 4, 1);
+  sprite.position.set(0, 1.45, 0.6);
+  sprite.scale.set(0.82, 0.82, 1);
   return sprite;
 };
 
@@ -75,6 +58,11 @@ export const createFootballer = (
     stripe,
   );
   chestStripe.position.set(0, 1.35, -0.42);
+  const backPanel = new THREE.Mesh(
+    new THREE.BoxGeometry(0.72, 0.82, 0.08),
+    stripe,
+  );
+  backPanel.position.set(0, 1.35, 0.43);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 16, 16), skin);
   head.position.y = 2.25;
   const hair = new THREE.Mesh(
@@ -82,7 +70,7 @@ export const createFootballer = (
     new THREE.MeshStandardMaterial({ color: kind === "star" ? "#d8d2bc" : "#161515" }),
   );
   hair.position.y = 2.39;
-  player.add(body, chestStripe, head, hair);
+  player.add(body, chestStripe, backPanel, head, hair);
   [-1, 1].forEach((side) => {
     const arm = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.12, 0.56, 4, 8),
@@ -101,7 +89,6 @@ export const createFootballer = (
   });
   if (number) {
     player.add(createNumber(number));
-    if (kind === "star") player.add(createLabel("NEYMAR JR", 1.82, 1.2));
   }
   player.traverse((item) => {
     if (item instanceof THREE.Mesh) {
