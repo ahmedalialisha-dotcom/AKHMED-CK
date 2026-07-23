@@ -12,6 +12,7 @@ type SceneEvents = {
   onOpponentDribble: (fromRestart: boolean) => void;
   onBallWon: () => void;
   onOpponentPass: () => void;
+  onPrematch: (active: boolean) => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onStats: (power: number) => void;
@@ -107,6 +108,22 @@ export function useFootballScene(
     let statsTimer = 0;
     let resetTimer = 0;
     let protectedUntil = 0;
+    let matchStarted = penalty;
+    const entranceStarted = performance.now();
+    const entranceDuration = 5500;
+    const teamEntranceTargets = teamPlayers.map((footballer) => footballer.position.clone());
+    const opponentEntranceTargets = defenders.map((footballer) => footballer.position.clone());
+    const teamEntranceStarts = teamPlayers.map((_, index) =>
+      new THREE.Vector3(-FIELD_HALF_WIDTH - 4, 0.1, 16 - index * 2.5),
+    );
+    const opponentEntranceStarts = defenders.map((_, index) =>
+      new THREE.Vector3(FIELD_HALF_WIDTH + 4, 0.1, -16 + index * 2.5),
+    );
+    if (!penalty) {
+      teamPlayers.forEach((footballer, index) => footballer.position.copy(teamEntranceStarts[index]));
+      defenders.forEach((footballer, index) => footballer.position.copy(opponentEntranceStarts[index]));
+      events.onPrematch(true);
+    }
     const planEnemyShot = (carrierZ: number) => {
       const roll = Math.random();
       if (roll < 0.05) {
@@ -196,17 +213,17 @@ export function useFootballScene(
         event.preventDefault();
       sounds.startCrowd();
       keys.add(event.code);
-      if (event.code === "KeyR" && canShootRef.current) reset();
+      if (event.code === "KeyR" && canShootRef.current && matchStarted) reset();
       if (event.code === "KeyC" && !penalty && (enemyCarrier || enemyShot)) {
         const currentIndex = teamPlayers.indexOf(activePlayer);
         activePlayer = teamPlayers[(currentIndex + 1) % teamPlayers.length];
       }
-      if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
-      if (event.code === "KeyE" && hasBall && !penalty) {
+      if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall && matchStarted) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
+      if (event.code === "KeyE" && hasBall && !penalty && matchStarted) {
         const target = teamPlayers.filter((teammate) => teammate !== activePlayer).sort((first, second) => first.position.distanceTo(activePlayer.position) - second.position.distanceTo(activePlayer.position))[0];
         if (target) { passTarget = target; hasBall = false; ballVelocity.copy(target.position.clone().sub(activePlayer.position).setY(0).normalize().multiplyScalar(0.68)); sounds.playKick(); }
       }
-      if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShootRef.current) {
+      if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShootRef.current && matchStarted) {
         const style = event.code;
         curvedShot = style === "KeyF";
         hasBall = false;
@@ -216,7 +233,7 @@ export function useFootballScene(
         ballVelocity.set(side, lift, -speed).applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         sounds.playKick();
       }
-      if (event.code === "Space" && hasBall && !finished && !chargeStarted && canShootRef.current) chargeStarted = performance.now();
+      if (event.code === "Space" && hasBall && !finished && !chargeStarted && canShootRef.current && matchStarted) chargeStarted = performance.now();
     };
     const onKeyUp = (event: KeyboardEvent) => {
       keys.delete(event.code);
@@ -249,9 +266,24 @@ export function useFootballScene(
           item.position.y = item.userData.fanBaseY + Math.max(0, Math.sin(performance.now() / 240 + item.userData.fanPhase)) * .22;
         }
       });
+      if (!matchStarted) {
+        const progress = THREE.MathUtils.clamp((performance.now() - entranceStarted) / entranceDuration, 0, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        teamPlayers.forEach((footballer, index) =>
+          footballer.position.lerpVectors(teamEntranceStarts[index], teamEntranceTargets[index], eased),
+        );
+        defenders.forEach((footballer, index) =>
+          footballer.position.lerpVectors(opponentEntranceStarts[index], opponentEntranceTargets[index], eased),
+        );
+        ball.position.set(0, 0.31, 0);
+        if (progress >= 1) {
+          matchStarted = true;
+          events.onPrematch(false);
+        }
+      }
       selectionRing.position.x = activePlayer.position.x;
       selectionRing.position.z = activePlayer.position.z;
-      if (!finished) {
+      if (!finished && matchStarted) {
         const sprinting = keys.has("KeyQ") && keys.has("KeyW") && stamina > 0;
         stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 : 7) * delta, 0, 100);
         if (performance.now() - statsTimer > 80) { events.onStats(chargeStarted ? THREE.MathUtils.clamp((performance.now() - chargeStarted) / 9, 0, 100) : 0); events.onStamina(stamina); statsTimer = performance.now(); }
