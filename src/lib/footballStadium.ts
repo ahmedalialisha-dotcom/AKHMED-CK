@@ -1,6 +1,7 @@
 import * as THREE from "three";
 import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
 import { addFootballPitch } from "./footballPitch";
+import { addEndCrowds } from "./footballCrowd";
 
 const createNumber = (value: string) => {
   const canvas = document.createElement("canvas");
@@ -193,6 +194,7 @@ export const addDayStadium = (scene: THREE.Scene) => {
     sideFans.instanceMatrix.needsUpdate = true;
     scene.add(sideFans);
   });
+  addEndCrowds(scene);
   [
     [-24.5, -37],
     [24.5, -37],

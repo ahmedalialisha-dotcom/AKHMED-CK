@@ -3,6 +3,7 @@ import { useFootballScene } from "../hooks/useFootballScene";
 import { usePenaltyShootout } from "../hooks/usePenaltyShootout";
 import { useDeviceMode } from "../hooks/useDeviceMode";
 import MobileControls from "./MobileControls";
+import FormationPreview from "./FormationPreview";
 import "../football3d.css";
 
 type Props = { onExit: () => void; tournament: string; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
@@ -100,7 +101,7 @@ export default function Football3D({ onExit, tournament, penalty = false, target
       </section>
       <div className="three-game__stage">
         <div ref={mountRef} className="three-game__canvas" aria-label="3D футбольное поле" />
-        {prematch && <div className="prematch-show"><span>FOOTBALL 3D</span><h2>КОМАНДЫ ВЫХОДЯТ НА ПОЛЕ</h2><p>{tournament} · 11 НА 11</p><i /></div>}
+        {prematch && <div className="prematch-show"><span>FOOTBALL 3D</span><h2>КОМАНДЫ ВЫХОДЯТ НА ПОЛЕ</h2><p>{tournament} · 11 НА 11 · СХЕМА 4–3–2–1</p><FormationPreview /><i /></div>}
       </div>
       <div className="match-hud"><div><span>СИЛА УДАРА</span><i><b style={{ width: `${power}%` }} /></i></div><div><span>ВЫНОСЛИВОСТЬ</span><i className="stamina"><b style={{ width: `${stamina}%` }} /></i></div></div>
       {penalty && <div className="penalty-timing"><span>СЛИШКОМ СЛАБО</span><b>50 / 50</b><strong>ТОЧНО</strong></div>}
