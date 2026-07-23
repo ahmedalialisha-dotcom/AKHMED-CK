@@ -23,13 +23,13 @@ export function teamAttackPosition(index: number, carrier: THREE.Group) {
   );
 }
 
-export function teamDefensePosition(index: number, ballX: number) {
+export function teamDefensePosition(index: number, ballX: number, ballZ = 0) {
   const lane = (index % 5 - 2) * 7;
   const row = Math.floor(index / 5);
   return new THREE.Vector3(
-    THREE.MathUtils.clamp(lane + ballX * 0.18, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
+    THREE.MathUtils.clamp(lane + ballX * 0.12, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
     0.1,
-    25 + row * 8,
+    THREE.MathUtils.clamp(22 + row * 9 + ballZ * 0.16, 10, FIELD_HALF_LENGTH - 8),
   );
 }
 
@@ -47,8 +47,17 @@ export function opponentDefensePosition(index: number, ballX: number) {
   const lane = (index % 5 - 2) * 7;
   const row = Math.floor(index / 5);
   return new THREE.Vector3(
-    THREE.MathUtils.clamp(lane + ballX * 0.18, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
+    THREE.MathUtils.clamp(lane + ballX * 0.12, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
     0.1,
     -7 - row * 10,
+  );
+}
+
+export function coverPosition(target: THREE.Vector3, ownGoalZ: number) {
+  const towardGoal = Math.sign(ownGoalZ - target.z);
+  return new THREE.Vector3(
+    THREE.MathUtils.clamp(target.x * 0.72, -FIELD_HALF_WIDTH + 3, FIELD_HALF_WIDTH - 3),
+    0.1,
+    target.z + towardGoal * 5.5,
   );
 }
