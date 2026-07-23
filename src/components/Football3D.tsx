@@ -84,7 +84,7 @@ export default function Football3D({ onExit, tournament, penalty = false, target
     <main className={`three-game ${isPhone ? "three-game--phone" : "three-game--desktop"}`}>
       <header className="three-game__header">
         <div>
-          <p>{tournament} · FOOTBALL MOMENTS 3D</p>
+          <p>{tournament} · FOOTBALL 3D</p>
           <h1>{penalty ? 'Пенальти' : 'Повтори гол'}</h1>
         </div>
         <div className="goal-counter">

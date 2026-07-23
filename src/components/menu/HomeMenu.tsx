@@ -24,8 +24,8 @@ export default function HomeMenu({ userEmail, onStart, onScreen }: Props) {
     <main className="home-menu" style={{ backgroundImage: `url(${neymarHero})` }}>
       <div className="home-menu__shade" />
       <header className="home-menu__topbar">
-        <a className="brand" href="#top" aria-label="Football Moments 3D">
-          <span>FM</span><strong>Football Moments</strong>
+        <a className="brand" href="#top" aria-label="FOOTBALL 3D">
+          <span>F3</span><strong>FOOTBALL 3D</strong>
         </a>
         <button className="profile-chip" onClick={() => onScreen(userEmail ? "profile" : "auth")}>
           <span>{userEmail ? userEmail[0].toUpperCase() : "○"}</span>
