@@ -38,10 +38,10 @@ export function useFootballScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     mount.appendChild(renderer.domElement);
-    const player = createFootballer("star", "10");
+    const player = createFootballer("star", "11");
     player.position.set(0, 0.1, penalty ? -7 : 20);
     scene.add(player);
-    const teammates = [createFootballer("star", "7"), createFootballer("star", "11")];
+    const teammates = [createFootballer("star", "7"), createFootballer("star", "10")];
     if (!penalty) {
       teammates[0].position.set(-8, 0.1, 11);
       teammates[1].position.set(8, 0.1, 2);

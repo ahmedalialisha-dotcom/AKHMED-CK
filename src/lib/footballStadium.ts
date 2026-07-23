@@ -74,7 +74,7 @@ export const createFootballer = (
     new THREE.BoxGeometry(0.18, 0.9, 0.9),
     stripe,
   );
-  chestStripe.position.set(0, 1.35, 0.42);
+  chestStripe.position.set(0, 1.35, -0.42);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 16, 16), skin);
   head.position.y = 2.25;
   const hair = new THREE.Mesh(
