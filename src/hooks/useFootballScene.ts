@@ -525,11 +525,12 @@ export function useFootballScene(
             events.onOpponentDribble(false);
           }
         });
-        goalkeeper.position.x = THREE.MathUtils.clamp(
-          ball.position.x * 0.55,
-          -2.6,
-          2.6,
-        );
+        const nearestOpponent = defenders.reduce((distance, defender) =>
+          Math.min(distance, defender.position.distanceTo(activePlayer.position)), Number.POSITIVE_INFINITY);
+        const playerOneOnOne = hasBall && activePlayer.position.z < GOAL_Z + 15 && nearestOpponent > 3.8;
+        const goalkeeperTargetZ = playerOneOnOne ? GOAL_Z + 6.5 : KEEPER_Z;
+        goalkeeper.position.z = THREE.MathUtils.lerp(goalkeeper.position.z, goalkeeperTargetZ, 0.055);
+        goalkeeper.position.x = THREE.MathUtils.lerp(goalkeeper.position.x, THREE.MathUtils.clamp(ball.position.x * (playerOneOnOne ? .82 : .55), -3.4, 3.4), .12);
         goalkeeper.position.y = !hasBall && ball.position.z < GOAL_Z + 8 ? 0.1 + Math.sin(performance.now() / 80) * 0.55 : 0.1;
         const lowDive = !hasBall && ball.position.z < GOAL_Z + 8 && ball.position.y < 1.1;
         goalkeeper.rotation.z = lowDive ? THREE.MathUtils.clamp(-ball.position.x * .22, -.75, .75) : 0;
@@ -549,6 +550,21 @@ export function useFootballScene(
             events.onConcede(scored);
             resetTimer = window.setTimeout(reset, 2000);
           }
+        }
+        if (enemyCarrier && !enemyShot) {
+          const nearestHomeDefender = teamPlayers.reduce((distance, footballer) =>
+            Math.min(distance, footballer.position.distanceTo(enemyCarrier!.position)), Number.POSITIVE_INFINITY);
+          const enemyOneOnOne = enemyCarrier.position.z > HOME_GOAL_Z - 15 && nearestHomeDefender > 3.8;
+          homeGoalkeeper.position.z = THREE.MathUtils.lerp(
+            homeGoalkeeper.position.z,
+            enemyOneOnOne ? HOME_GOAL_Z - 6.5 : HOME_KEEPER_Z,
+            .055,
+          );
+          homeGoalkeeper.position.x = THREE.MathUtils.lerp(
+            homeGoalkeeper.position.x,
+            THREE.MathUtils.clamp(ball.position.x * (enemyOneOnOne ? .82 : .55), -3.4, 3.4),
+            .12,
+          );
         }
         if (!enemyShot && !hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
           goalHandled = true;

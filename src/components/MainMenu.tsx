@@ -20,6 +20,7 @@ type Props = {
   onTeam: (team: string) => void;
   onOpponent: (team: string) => void;
   onPenalty: (homeTeam: string, awayTeam: string) => void;
+  onCareer: () => void;
 };
 
 export default function MainMenu(props: Props) {

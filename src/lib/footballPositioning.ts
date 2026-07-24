@@ -1,5 +1,5 @@
 import * as THREE from "three";
-import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, HOME_GOAL_Z } from "./footballField";
+import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, HOME_GOAL_Z, OPPONENT_FORMATION, TEAM_FORMATION } from "./footballField";
 
 export function moveToPosition(
   player: THREE.Group,
@@ -14,16 +14,12 @@ export function moveToPosition(
 }
 
 export function teamAttackPosition(index: number, carrier: THREE.Group) {
-  const lane = (index % 5 - 2) * 7.5;
-  const row = Math.floor(index / 5);
+  const base = TEAM_FORMATION[Math.max(0, index - 1)] ?? [0, 7];
   const isDefender = index >= 1 && index <= 4;
-  const targetZ = THREE.MathUtils.clamp(
-    carrier.position.z - 6 + row * 8,
-    -FIELD_HALF_LENGTH + 4,
-    FIELD_HALF_LENGTH - 3,
-  );
+  const teamShift = THREE.MathUtils.clamp((carrier.position.z - 12) * 0.48, -24, 8);
+  const targetZ = THREE.MathUtils.clamp(base[1] + teamShift, -FIELD_HALF_LENGTH + 4, FIELD_HALF_LENGTH - 3);
   return new THREE.Vector3(
-    THREE.MathUtils.clamp(lane + carrier.position.x * 0.28, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
+    THREE.MathUtils.clamp(base[0] + carrier.position.x * 0.22, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
     0.1,
     isDefender ? Math.max(1, targetZ) : targetZ,
   );
@@ -40,12 +36,12 @@ export function teamDefensePosition(index: number, ballX: number, ballZ = 0) {
 }
 
 export function opponentAttackPosition(index: number, carrier: THREE.Group) {
-  const lane = (index % 5 - 2) * 7.5;
-  const row = Math.floor(index / 5);
+  const base = OPPONENT_FORMATION[index] ?? [0, -6];
+  const teamShift = THREE.MathUtils.clamp((carrier.position.z + 8) * 0.46, -7, 25);
   return new THREE.Vector3(
-    THREE.MathUtils.clamp(lane + carrier.position.x * 0.28, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
+    THREE.MathUtils.clamp(base[0] + carrier.position.x * 0.22, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
     0.1,
-    Math.min(HOME_GOAL_Z - 4, carrier.position.z + 6 - row * 8),
+    Math.min(HOME_GOAL_Z - 4, base[1] + teamShift),
   );
 }
 
