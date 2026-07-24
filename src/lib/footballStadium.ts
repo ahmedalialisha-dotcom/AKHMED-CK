@@ -42,10 +42,6 @@ export const createFootballer = (
     color: selectedColors[0],
     roughness: 0.7,
   });
-  const stripe = new THREE.MeshStandardMaterial({
-    color: selectedColors[1],
-    roughness: 0.7,
-  });
   const skin = new THREE.MeshStandardMaterial({
     color: kind === "star" ? "#a65f42" : "#8c543d",
   });
@@ -56,16 +52,6 @@ export const createFootballer = (
     shirt,
   );
   body.position.y = 1.35;
-  const chestStripe = new THREE.Mesh(
-    new THREE.BoxGeometry(0.18, 0.9, 0.9),
-    stripe,
-  );
-  chestStripe.position.set(0, 1.35, -0.42);
-  const backPanel = new THREE.Mesh(
-    new THREE.BoxGeometry(0.72, 0.82, 0.08),
-    stripe,
-  );
-  backPanel.position.set(0, 1.35, 0.43);
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 16, 16), skin);
   head.position.y = 2.25;
   const hair = new THREE.Mesh(
@@ -73,7 +59,7 @@ export const createFootballer = (
     new THREE.MeshStandardMaterial({ color: kind === "star" ? "#d8d2bc" : "#161515" }),
   );
   hair.position.y = 2.39;
-  player.add(body, chestStripe, backPanel, head, hair);
+  player.add(body, head, hair);
   [-1, 1].forEach((side) => {
     const arm = new THREE.Mesh(
       new THREE.CapsuleGeometry(0.12, 0.56, 4, 8),

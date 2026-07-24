@@ -5,6 +5,8 @@ export type CareerStats = {
   stamina: number;
 };
 
+export type TrainingType = "shooting" | "passing" | "sprint";
+
 const clampStat = (value: number) => Math.round(Math.min(95, Math.max(62, value)));
 
 export function getCareerStats(age: number): CareerStats {

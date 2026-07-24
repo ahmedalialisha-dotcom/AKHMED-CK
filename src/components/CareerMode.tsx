@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import { CLUB_TEAMS } from "../lib/footballTeams";
 import Football3D from "./Football3D";
 import { getCareerStats } from "../lib/careerPlayer";
+import type { TrainingType } from "../lib/careerPlayer";
 import "../career-mode.css";
 
 type Props = {
@@ -12,9 +13,9 @@ type Props = {
 };
 
 const drills = [
-  { icon: "◎", title: "Точность удара", text: "Работа над завершением атак" },
-  { icon: "↗", title: "Короткий пас", text: "Быстрые комбинации команды" },
-  { icon: "⚡", title: "Скорость", text: "Рывки и выходы один на один" },
+  { icon: "◎", title: "Точность удара", text: "Забей гол вратарю", type: "shooting" as TrainingType },
+  { icon: "↗", title: "Короткий пас", text: "Выполни 5 точных передач", type: "passing" as TrainingType },
+  { icon: "⚡", title: "Скорость", text: "Ускоряйся 5 секунд", type: "sprint" as TrainingType },
 ];
 
 export default function CareerMode({ player, playerAge, team, onExit }: Props) {
@@ -23,6 +24,7 @@ export default function CareerMode({ player, playerAge, team, onExit }: Props) {
   const [completedDrills, setCompletedDrills] = useState<string[]>([]);
   const [playing, setPlaying] = useState(false);
   const [activeDrill, setActiveDrill] = useState<string>();
+  const selectedDrill = drills.find((drill) => drill.title === activeDrill);
   const [record, setRecord] = useState({ wins: 0, losses: 0 });
   const opponent = fixtures[matchIndex % fixtures.length].name;
   const stats = getCareerStats(playerAge);
@@ -36,12 +38,12 @@ export default function CareerMode({ player, playerAge, team, onExit }: Props) {
     setMatchIndex((index) => index + 1);
     setCompletedDrills([]);
   };
-  if (activeDrill) {
-    const finishTraining = (won: boolean) => {
-      if (won) setCompletedDrills((current) => [...current, activeDrill]);
+  if (activeDrill && selectedDrill) {
+    const finishTraining = () => {
+      setCompletedDrills((current) => [...current, activeDrill]);
       setActiveDrill(undefined);
     };
-    return <Football3D tournament={`Тренировка · ${activeDrill}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} targetGoals={1} onMatchEnd={finishTraining} onExit={() => setActiveDrill(undefined)} />;
+    return <Football3D tournament={`Тренировка · ${activeDrill}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} trainingType={selectedDrill.type} onTrainingComplete={finishTraining} onExit={() => setActiveDrill(undefined)} />;
   }
   if (playing) {
     return <Football3D tournament={`Карьера · Тур ${matchIndex + 1} · ${team} vs ${opponent}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} targetGoals={3} onMatchEnd={finishMatch} onExit={() => setPlaying(false)} />;

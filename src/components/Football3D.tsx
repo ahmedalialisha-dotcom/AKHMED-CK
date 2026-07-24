@@ -4,10 +4,11 @@ import { usePenaltyShootout } from "../hooks/usePenaltyShootout";
 import { useDeviceMode } from "../hooks/useDeviceMode";
 import MobileControls from "./MobileControls";
 import FormationPreview from "./FormationPreview";
+import type { TrainingType } from "../lib/careerPlayer";
 import "../football3d.css";
 
-type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; playerAge?: number; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
-export default function Football3D({ onExit, tournament, homeTeam, awayTeam, playerAge, penalty = false, targetGoals, onMatchEnd }: Props) {
+type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; playerAge?: number; trainingType?: TrainingType; onTrainingComplete?: () => void; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
+export default function Football3D({ onExit, tournament, homeTeam, awayTeam, playerAge, trainingType, onTrainingComplete, penalty = false, targetGoals, onMatchEnd }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState(
     "Веди мяч, не подпускай защитников и пробей мимо вратаря.",
@@ -20,12 +21,23 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
   const [power, setPower] = useState(0);
   const [stamina, setStamina] = useState(100);
   const [prematch, setPrematch] = useState(false);
+  const [trainingProgress, setTrainingProgress] = useState(0);
+  const trainingFinished = useRef(false);
   const isPhone = useDeviceMode();
   const shootout = usePenaltyShootout();
   const matchFinished = useRef(false);
   const matchTimer = useRef(0);
   useEffect(() => () => window.clearTimeout(matchTimer.current), []);
   const onGoal = useCallback(() => {
+    if (trainingType === "shooting") {
+      setTrainingProgress(1);
+      setMessage("Отличный удар! Тренировка выполнена.");
+      if (!trainingFinished.current) {
+        trainingFinished.current = true;
+        window.setTimeout(() => onTrainingComplete?.(), 900);
+      }
+      return;
+    }
     setGoals((current) => {
       const next = current + 1;
       goalsRef.current = next;
@@ -36,7 +48,7 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
       return next;
     });
     setMessage("ГОООЛ! Через 2 секунды атаку начнёт соперник.");
-  }, [onMatchEnd, targetGoals]);
+  }, [onMatchEnd, onTrainingComplete, targetGoals, trainingType]);
   const onMiss = useCallback(
     () => setMessage("Мимо ворот. Через 2 секунды соперник начнёт атаку."),
     [],
@@ -73,12 +85,31 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
   const onOpponentPenalty = useCallback((scored: boolean) => {
     shootout.recordOpponentShot(scored);
   }, [shootout.recordOpponentShot]);
+  const onTrainingAction = useCallback((action: TrainingType) => {
+    if (action !== trainingType || trainingFinished.current) return;
+    if (action === "passing") {
+      setTrainingProgress((current) => {
+        const next = current + 1;
+        setMessage(`Точный пас: ${next}/5`);
+        if (next >= 5) {
+          trainingFinished.current = true;
+          window.setTimeout(() => onTrainingComplete?.(), 700);
+        }
+        return next;
+      });
+    } else if (action === "sprint") {
+      trainingFinished.current = true;
+      setTrainingProgress(5);
+      setMessage("Норматив скорости выполнен!");
+      window.setTimeout(() => onTrainingComplete?.(), 700);
+    }
+  }, [onTrainingComplete, trainingType]);
   const sceneEvents = useMemo(
-    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty, onStats: setPower, onStamina: setStamina }),
-    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty],
+    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty, onTrainingAction, onStats: setPower, onStamina: setStamina }),
+    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty, onTrainingAction],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge);
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge, trainingType);
 
   const shownMessage = penalty ? shootout.message : message;
   const shownGoals = penalty ? shootout.playerGoals : goals;
@@ -99,7 +130,7 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
         </div>
       </header>
       <section className="three-game__brief">
-        <span>БОЛЬШОЙ ДНЕВНОЙ СТАДИОН · 11 НА 11 · ДИНАМИЧЕСКАЯ КАМЕРА</span>
+        <span>{trainingType ? `ТРЕНИРОВКА · ${trainingType === "shooting" ? "ЗАБЕЙ ГОЛ" : trainingType === "passing" ? `ТОЧНЫЕ ПЕРЕДАЧИ ${trainingProgress}/5` : `УСКОРЕНИЕ ${trainingProgress}/5`}` : "БОЛЬШОЙ ДНЕВНОЙ СТАДИОН · 11 НА 11 · ДИНАМИЧЕСКАЯ КАМЕРА"}</span>
         <p>{shownMessage}</p>
       </section>
       <div className="three-game__stage">

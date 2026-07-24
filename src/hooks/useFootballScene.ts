@@ -6,6 +6,7 @@ import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, HOME_GOAL_Z, HOME_KEEPER_Z
 import { coverPosition, moveToPosition, opponentAttackPosition, opponentDefensePosition, teamAttackPosition, teamDefensePosition } from "../lib/footballPositioning";
 import { findTeam } from "../lib/footballTeams";
 import { getCareerStats } from "../lib/careerPlayer";
+import type { TrainingType } from "../lib/careerPlayer";
 
 type SceneEvents = {
   onGoal: () => void;
@@ -18,6 +19,7 @@ type SceneEvents = {
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
   onOpponentPenalty: (scored: boolean) => void;
+  onTrainingAction: (action: TrainingType) => void;
   onStats: (power: number) => void;
   onStamina: (stamina: number) => void;
 };
@@ -32,6 +34,7 @@ export function useFootballScene(
   awayTeam?: string,
   opponentShotKey = 0,
   playerAge?: number,
+  trainingType?: TrainingType,
 ) {
   const canShootRef = useRef(canShoot);
   const opponentShotKeyRef = useRef(opponentShotKey);
@@ -87,7 +90,7 @@ export function useFootballScene(
     const penaltyOpponent = createFootballer("defender", "11", awayColors);
     penaltyOpponent.visible = false;
     scene.add(penaltyOpponent);
-    const defenders = penalty ? [] : OPPONENT_FORMATION.map(([x, z], index) => {
+    const defenders = penalty || trainingType ? [] : OPPONENT_FORMATION.map(([x, z], index) => {
       const defender = createFootballer("defender", String(index + 2), awayColors);
       defender.position.set(x, 0.1, z);
       scene.add(defender);
@@ -136,7 +139,9 @@ export function useFootballScene(
     let penaltyOpponentStarted = 0;
     let penaltyOpponentWillScore = false;
     let penaltyOpponentTargetX = 0;
-    let matchStarted = penalty;
+    let matchStarted = penalty || Boolean(trainingType);
+    let sprintTrainingTime = 0;
+    let sprintTrainingDone = false;
     const entranceStarted = performance.now();
     const entranceDuration = 5500;
     const teamEntranceTargets = teamPlayers.map((footballer) => footballer.position.clone());
@@ -147,7 +152,7 @@ export function useFootballScene(
     const opponentEntranceStarts = defenders.map((_, index) =>
       new THREE.Vector3(FIELD_HALF_WIDTH + 4, 0.1, -16 + index * 2.5),
     );
-    if (!penalty) {
+    if (!penalty && !trainingType) {
       teamPlayers.forEach((footballer, index) => footballer.position.copy(teamEntranceStarts[index]));
       defenders.forEach((footballer, index) => footballer.position.copy(opponentEntranceStarts[index]));
       events.onPrematch(true);
@@ -255,7 +260,7 @@ export function useFootballScene(
         const style = event.code;
         curvedShot = style === "KeyF";
         hasBall = false;
-        const side = style === "KeyF" ? .38 : 0;
+        const side = 0;
         const lift = style === "KeyG" ? .26 : style === "KeyH" ? .16 : .25;
         const speed = style === "KeyH" ? 1.75 : style === "KeyG" ? .82 : 1.12;
         ballVelocity.set(side, lift, -speed).applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
@@ -356,6 +361,13 @@ export function useFootballScene(
         }
       } else if (!finished && matchStarted) {
         const sprinting = keys.has("KeyQ") && keys.has("KeyW") && stamina > 0;
+        if (trainingType === "sprint" && sprinting && !sprintTrainingDone) {
+          sprintTrainingTime += delta;
+          if (sprintTrainingTime >= 5) {
+            sprintTrainingDone = true;
+            events.onTrainingAction("sprint");
+          }
+        }
         stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 / careerStamina : 7 * careerStamina) * delta, 0, 100);
         if (performance.now() - statsTimer > 80) { events.onStats(chargeStarted ? THREE.MathUtils.clamp((performance.now() - chargeStarted) / 9, 0, 100) : 0); events.onStamina(stamina); statsTimer = performance.now(); }
         if (keys.has("KeyA")) activePlayer.rotation.y += 2.5 * delta;
@@ -479,6 +491,7 @@ export function useFootballScene(
             activePlayer = passTarget;
             hasBall = true;
             passTarget = undefined;
+            if (trainingType === "passing") events.onTrainingAction("passing");
           }
           if (enemyPassTarget && activePlayer.position.distanceTo(ball.position) < 0.82) {
             enemyPassTarget = undefined;
@@ -576,7 +589,9 @@ export function useFootballScene(
           goalHandled = true;
           finished = true;
           const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55 * awayStrength;
-          const onTarget = curvedShot || Math.random() < THREE.MathUtils.clamp(.58 + homeStrength * .15 + careerTechnique * .1, .7, .9);
+          const onTarget = curvedShot
+            ? Math.random() < .9
+            : Math.random() < THREE.MathUtils.clamp(.58 + homeStrength * .15 + careerTechnique * .1, .7, .9);
           if (onTarget && Math.abs(ball.position.x) < 4.5 && !saved) {
             sounds.playGoal();
             events.onGoal();
@@ -585,7 +600,7 @@ export function useFootballScene(
           } else events.onMiss();
           if (!(onTarget && Math.abs(ball.position.x) < 4.5 && !saved)) events.onAttempt(false);
           if (!penalty) {
-            resetTimer = window.setTimeout(startOpponentPossession, 2000);
+            resetTimer = window.setTimeout(trainingType ? reset : startOpponentPossession, 2000);
           }
         }
       } else if (celebrationUntil > performance.now()) {
@@ -646,5 +661,5 @@ export function useFootballScene(
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [awayTeam, events, homeTeam, mountRef, penalty, playerAge, resetKey]);
+  }, [awayTeam, events, homeTeam, mountRef, penalty, playerAge, resetKey, trainingType]);
 }
