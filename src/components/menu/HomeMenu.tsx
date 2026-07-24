@@ -8,7 +8,7 @@ type Props = {
 
 const actions = [
   { icon: "⚡", title: "Быстрый матч", text: "Выбрать клуб и выйти на поле", action: "quick" },
-  { icon: "◎", title: "Серия пенальти", text: "Пять ударов до победы", action: "penalty" },
+  { icon: "◎", title: "Серия пенальти", text: "Выбрать команды и пробить", action: "penaltySelect" },
   { icon: "★", title: "Карьера", text: "Создать своего игрока", action: "career" },
   { icon: "◆", title: "Турниры", text: "Выбрать большое событие", action: "settings" },
 ];
@@ -16,7 +16,7 @@ const actions = [
 export default function HomeMenu({ userEmail, onScreen }: Props) {
   const selectAction = (action: string) => {
     if (action === "quick") onScreen("quick");
-    else onScreen(action as "penalty" | "career" | "settings");
+    else onScreen(action as "penaltySelect" | "career" | "settings");
   };
 
   return (
