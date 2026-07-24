@@ -12,6 +12,8 @@ export const SHOP_ITEMS: ShopItem[] = [
   { id: "jacket", icon: "🧥", name: "Дизайнерская куртка", price: 720 },
   { id: "camera", icon: "📷", name: "Камера", price: 580 },
   { id: "skate", icon: "🛹", name: "Скейтборд", price: 390 },
+  { id: "city-car", icon: "🚙", name: "Городской автомобиль", price: 1400 },
+  { id: "sport-car", icon: "🏎️", name: "Спортивный автомобиль", price: 1900 },
 ];
 
 type Props = {
