@@ -70,12 +70,15 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pen
     if (penalty) shootout.recordPlayerShot(scored);
     else setAttempts((value) => value + 1);
   }, [penalty, shootout.recordPlayerShot]);
+  const onOpponentPenalty = useCallback((scored: boolean) => {
+    shootout.recordOpponentShot(scored);
+  }, [shootout.recordOpponentShot]);
   const sceneEvents = useMemo(
-    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onStats: setPower, onStamina: setStamina }),
-    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt],
+    () => ({ onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty, onStats: setPower, onStamina: setStamina }),
+    [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam);
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey);
 
   const shownMessage = penalty ? shootout.message : message;
   const shownGoals = penalty ? shootout.playerGoals : goals;

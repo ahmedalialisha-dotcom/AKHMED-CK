@@ -16,6 +16,7 @@ type SceneEvents = {
   onPrematch: (active: boolean) => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
+  onOpponentPenalty: (scored: boolean) => void;
   onStats: (power: number) => void;
   onStamina: (stamina: number) => void;
 };
@@ -28,17 +29,24 @@ export function useFootballScene(
   resetKey = 0,
   homeTeam?: string,
   awayTeam?: string,
+  opponentShotKey = 0,
 ) {
   const canShootRef = useRef(canShoot);
+  const opponentShotKeyRef = useRef(opponentShotKey);
   useEffect(() => { canShootRef.current = canShoot; }, [canShoot]);
+  useEffect(() => { opponentShotKeyRef.current = opponentShotKey; }, [opponentShotKey]);
 
   useEffect(() => {
     const mount = mountRef.current;
     if (!mount) return;
     const scene = new THREE.Scene();
     addDayStadium(scene);
-    const homeColors = findTeam(homeTeam)?.colors;
-    const awayColors = findTeam(awayTeam)?.colors;
+    const homeData = findTeam(homeTeam);
+    const awayData = findTeam(awayTeam);
+    const homeColors = homeData?.colors;
+    const awayColors = awayData?.colors;
+    const homeStrength = (homeData?.rating ?? 82) / 85;
+    const awayStrength = (awayData?.rating ?? 82) / 85;
     const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 240);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -70,6 +78,9 @@ export function useFootballScene(
     homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
     homeGoalkeeper.rotation.y = Math.PI;
     scene.add(homeGoalkeeper);
+    const penaltyOpponent = createFootballer("defender", "11", awayColors);
+    penaltyOpponent.visible = false;
+    scene.add(penaltyOpponent);
     const defenders = penalty ? [] : OPPONENT_FORMATION.map(([x, z], index) => {
       const defender = createFootballer("defender", String(index + 2), awayColors);
       defender.position.set(x, 0.1, z);
@@ -113,6 +124,12 @@ export function useFootballScene(
     let statsTimer = 0;
     let resetTimer = 0;
     let protectedUntil = 0;
+    let handledOpponentShot = opponentShotKeyRef.current;
+    let penaltyOpponentActive = false;
+    let penaltyOpponentKicked = false;
+    let penaltyOpponentStarted = 0;
+    let penaltyOpponentWillScore = false;
+    let penaltyOpponentTargetX = 0;
     let matchStarted = penalty;
     const entranceStarted = performance.now();
     const entranceDuration = 5500;
@@ -226,7 +243,7 @@ export function useFootballScene(
       if (["Digit1", "Digit2", "Digit3"].includes(event.code) && hasBall && matchStarted) { feintStyle = Number(event.code.charAt(event.code.length - 1)); feintUntil = performance.now() + 460; }
       if (event.code === "KeyE" && hasBall && !penalty && matchStarted) {
         const target = teamPlayers.filter((teammate) => teammate !== activePlayer).sort((first, second) => first.position.distanceTo(activePlayer.position) - second.position.distanceTo(activePlayer.position))[0];
-        if (target) { passTarget = target; hasBall = false; ballVelocity.copy(target.position.clone().sub(activePlayer.position).setY(0).normalize().multiplyScalar(0.68)); sounds.playKick(); }
+        if (target) { passTarget = target; hasBall = false; ballVelocity.copy(target.position.clone().sub(activePlayer.position).setY(0).normalize().multiplyScalar(0.68 * homeStrength)); sounds.playKick(); }
       }
       if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShootRef.current && matchStarted) {
         const style = event.code;
@@ -288,7 +305,50 @@ export function useFootballScene(
       }
       selectionRing.position.x = activePlayer.position.x;
       selectionRing.position.z = activePlayer.position.z;
-      if (!finished && matchStarted) {
+      if (penalty && opponentShotKeyRef.current > handledOpponentShot) {
+        handledOpponentShot = opponentShotKeyRef.current;
+        penaltyOpponentActive = true;
+        penaltyOpponentKicked = false;
+        penaltyOpponentStarted = performance.now();
+        penaltyOpponentTargetX = THREE.MathUtils.randFloat(-3.3, 3.3);
+        const scoringChance = THREE.MathUtils.clamp(0.68 + (awayStrength - homeStrength) * 0.45, 0.42, 0.86);
+        penaltyOpponentWillScore = Math.random() < scoringChance;
+        penaltyOpponent.position.set(0, 0.1, 22);
+        penaltyOpponent.rotation.y = Math.PI;
+        penaltyOpponent.visible = true;
+        player.visible = false;
+        goalkeeper.visible = false;
+        ball.position.set(0, 0.31, 23);
+        ballVelocity.set(0, 0, 0);
+        homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
+        finished = false;
+      }
+      if (penaltyOpponentActive) {
+        const elapsed = performance.now() - penaltyOpponentStarted;
+        if (!penaltyOpponentKicked) {
+          penaltyOpponent.position.z = Math.min(25.5, 22 + elapsed * 0.0045);
+          ball.position.set(0, 0.31, 26.1);
+          if (elapsed > 780) {
+            penaltyOpponentKicked = true;
+            const targetX = penaltyOpponentWillScore ? penaltyOpponentTargetX : THREE.MathUtils.randFloat(-1.2, 1.2);
+            ballVelocity.set(targetX - ball.position.x, 0.1, HOME_GOAL_Z - ball.position.z).normalize().multiplyScalar(1.25 * awayStrength);
+            ballVelocity.y = 0.12;
+            sounds.playKick();
+          }
+        } else {
+          ball.position.add(ballVelocity);
+          ballVelocity.y -= 0.01;
+          const keeperTarget = penaltyOpponentWillScore ? -Math.sign(penaltyOpponentTargetX || 1) * 2.2 : penaltyOpponentTargetX;
+          homeGoalkeeper.position.x = THREE.MathUtils.lerp(homeGoalkeeper.position.x, keeperTarget, 0.09 * homeStrength);
+          homeGoalkeeper.position.y = 0.1 + Math.abs(homeGoalkeeper.position.x) * 0.16;
+          homeGoalkeeper.rotation.z = -homeGoalkeeper.position.x * 0.22;
+          if (ball.position.z >= HOME_GOAL_Z - 0.2) {
+            penaltyOpponentActive = false;
+            finished = true;
+            events.onOpponentPenalty(penaltyOpponentWillScore);
+          }
+        }
+      } else if (!finished && matchStarted) {
         const sprinting = keys.has("KeyQ") && keys.has("KeyW") && stamina > 0;
         stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 : 7) * delta, 0, 100);
         if (performance.now() - statsTimer > 80) { events.onStats(chargeStarted ? THREE.MathUtils.clamp((performance.now() - chargeStarted) / 9, 0, 100) : 0); events.onStamina(stamina); statsTimer = performance.now(); }
@@ -299,7 +359,7 @@ export function useFootballScene(
           .set(0, 0, -1)
           .applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         if (!penalty && keys.has("KeyW"))
-          activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * delta);
+          activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * homeStrength * delta);
         if (!penalty && keys.has("KeyS"))
           activePlayer.position.addScaledVector(forward, -3.8 * delta);
         activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -FIELD_HALF_WIDTH + 1.5, FIELD_HALF_WIDTH - 1.5);
@@ -359,7 +419,7 @@ export function useFootballScene(
                 if (target) {
                   enemyPassTarget = target;
                   enemyCarrier = undefined;
-                  ballVelocity.copy(target.position.clone().sub(ball.position).normalize().multiplyScalar(0.72));
+                  ballVelocity.copy(target.position.clone().sub(ball.position).normalize().multiplyScalar(0.72 * awayStrength));
                   ballVelocity.y = 0.035;
                   carrier.rotation.z = 0;
                   sounds.playKick();
@@ -370,7 +430,7 @@ export function useFootballScene(
             }
             const feinting = now < enemyFeintUntil;
             const weave = Math.sin(now / 230) * 1.8 + (feinting ? enemyFeintDirection * 2.3 : 0);
-            carrier.position.z += (feinting ? 4.1 : 5.4) * delta;
+            carrier.position.z += (feinting ? 4.1 : 5.4) * awayStrength * delta;
             carrier.position.x += (weave - carrier.position.x) * 1.9 * delta;
             carrier.rotation.y = Math.PI + (feinting ? enemyFeintDirection * 0.32 : 0);
             carrier.rotation.z = feinting ? enemyFeintDirection * 0.13 : 0;
@@ -396,7 +456,7 @@ export function useFootballScene(
           const receivingPlayer = passTarget ?? enemyPassTarget;
           if (receivingPlayer) {
             const direction = receivingPlayer.position.clone().sub(ball.position).setY(0).normalize();
-            const speed = passTarget ? 0.72 : 0.74;
+            const speed = passTarget ? 0.72 * homeStrength : 0.74 * awayStrength;
             ballVelocity.x = THREE.MathUtils.lerp(ballVelocity.x, direction.x * speed, 0.18);
             ballVelocity.z = THREE.MathUtils.lerp(ballVelocity.z, direction.z * speed, 0.18);
           }
@@ -449,7 +509,7 @@ export function useFootballScene(
           const target = hasBall ? activePlayer.position : ball.position;
           const chase = target.clone().sub(defender.position).setY(0);
           if (defender === pressingDefender && chase.length() > 0.1)
-            defender.position.addScaledVector(chase.normalize(), 3.25 * delta);
+            defender.position.addScaledVector(chase.normalize(), 3.25 * awayStrength * delta);
           else if (defender === coveringDefender)
             moveToPosition(defender, coverPosition(target, GOAL_Z), 3.1, delta);
           else moveToPosition(defender, opponentDefensePosition(defenderIndex, target.x), 3, delta);
@@ -484,7 +544,7 @@ export function useFootballScene(
           if (ball.position.z > HOME_GOAL_Z + 0.2 && !goalHandled) {
             goalHandled = true;
             finished = true;
-            const saved = Math.abs(ball.position.x - homeGoalkeeper.position.x) < 0.55;
+            const saved = Math.abs(ball.position.x - homeGoalkeeper.position.x) < 0.55 * homeStrength;
             const scored = Math.abs(ball.position.x) < 4.5 && ball.position.y < 4 && !saved;
             events.onConcede(scored);
             resetTimer = window.setTimeout(reset, 2000);
@@ -493,8 +553,8 @@ export function useFootballScene(
         if (!enemyShot && !hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
           goalHandled = true;
           finished = true;
-          const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55;
-          const onTarget = curvedShot || Math.random() < .8;
+          const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55 * awayStrength;
+          const onTarget = curvedShot || Math.random() < THREE.MathUtils.clamp(.62 + homeStrength * .18, .72, .86);
           if (onTarget && Math.abs(ball.position.x) < 4.5 && !saved) {
             sounds.playGoal();
             events.onGoal();
