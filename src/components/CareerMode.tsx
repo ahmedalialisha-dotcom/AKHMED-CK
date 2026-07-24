@@ -72,6 +72,7 @@ export default function CareerMode({ player, playerAge, hairStyle, team, onExit 
             return <button className={completed ? "training-card completed" : "training-card"} disabled={completed} key={drill.title} onClick={() => setActiveDrill(drill.title)}><b>{completed ? "✓" : drill.icon}</b><span><strong>{drill.title}</strong><small>{completed ? "Выполнено" : `${drill.text} · Играть`}</small></span></button>;
           })}
         </div>
+        <button className="skip-training" onClick={() => setCompletedDrills(drills.map((drill) => drill.title))}>Пропустить тренировку →</button>
       </section>
       <button className="career-play" disabled={completedDrills.length < drills.length} onClick={() => setPlaying(true)}>
         {completedDrills.length < drills.length ? `Выполни упражнения: ${completedDrills.length}/3` : `Играть против ${opponent} →`}

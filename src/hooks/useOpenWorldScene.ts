@@ -34,7 +34,7 @@ const createCar = (color: string) => {
   cabin.position.set(0, 1.45, .05); car.add(body, cabin); return car;
 };
 
-export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, position: Position, hairStyle: HairStyle, equipped: string[], cutting: boolean, driving: boolean) {
+export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, position: Position, hairStyle: HairStyle, equipped: string[], cutting: boolean, eating: boolean, driving: boolean) {
   const positionRef = useRef(position);
   useEffect(() => { positionRef.current = position; }, [position]);
   useEffect(() => {
@@ -57,6 +57,8 @@ export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, pos
     }
     shopSigns.forEach(([name, x, z]) => { const sign = createSign(name); sign.position.set(x, 7.2, z); scene.add(sign); });
     const displayCars = [createCar("#dc2929"), createCar("#2468c9")]; displayCars[0].position.set(18, 0, -3); displayCars[1].position.set(18, 0, 3); scene.add(...displayCars);
+    const cafeTable = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.1, .12, 20), new THREE.MeshStandardMaterial({ color: "#7a4c2c" })); cafeTable.position.set(-18, 1.05, -13); scene.add(cafeTable);
+    const meal = new THREE.Mesh(new THREE.CylinderGeometry(.3, .3, .18, 14), new THREE.MeshStandardMaterial({ color: "#e8a33b" })); meal.position.set(-18, 1.25, -13); meal.visible = eating; scene.add(meal);
     const playerCar = createCar("#d8a938"); playerCar.visible = driving; scene.add(playerCar);
     const scissors = new THREE.Group();
     [-.15, .15].forEach((rotation) => { const blade = new THREE.Mesh(new THREE.BoxGeometry(.08, .08, 1.1), new THREE.MeshStandardMaterial({ color: "#e7ecec", metalness: .8 })); blade.rotation.y = rotation; scissors.add(blade); });
@@ -71,6 +73,7 @@ export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, pos
       if (Math.abs(actor.position.z - target.z) > 60) actor.position.z = target.z;
       actor.position.x = THREE.MathUtils.lerp(actor.position.x, target.x, .16); actor.position.z = THREE.MathUtils.lerp(actor.position.z, target.z, .16); actor.rotation.y = target.heading;
       player.visible = !driving; playerCar.visible = driving;
+      if (eating && !driving) player.position.y = .1 + Math.sin(performance.now() / 120) * .025;
       const time = performance.now() / 1000;
       npcs.forEach((npc, index) => { const lane = (index - 3) * 7; npc.position.set(Math.sin(time * (.25 + index * .025)) * 48, .1, lane); npc.rotation.y = Math.cos(time * (.25 + index * .025)) > 0 ? Math.PI / 2 : -Math.PI / 2; });
       if (cutting) scissors.rotation.y += .16;
@@ -79,6 +82,13 @@ export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, pos
     };
     const resize = () => { const { width, height } = mount.getBoundingClientRect(); renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix(); };
     const observer = new ResizeObserver(resize); observer.observe(mount); resize(); render();
-    return () => { cancelAnimationFrame(animation); observer.disconnect(); renderer.dispose(); renderer.domElement.remove(); };
-  }, [cutting, driving, equipped, hairStyle, mountRef]);
+    return () => {
+      cancelAnimationFrame(animation); observer.disconnect();
+      scene.traverse((item) => {
+        if (item instanceof THREE.Mesh) { item.geometry.dispose(); const materials = Array.isArray(item.material) ? item.material : [item.material]; materials.forEach((material) => material.dispose()); }
+        if (item instanceof THREE.Sprite) { item.material.map?.dispose(); item.material.dispose(); }
+      });
+      renderer.dispose(); renderer.domElement.remove();
+    };
+  }, [cutting, driving, eating, equipped, hairStyle, mountRef]);
 }
