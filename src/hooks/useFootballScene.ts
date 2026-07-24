@@ -353,6 +353,9 @@ export function useFootballScene(
         ball.position.set(0, 0.31, 23);
         ballVelocity.set(0, 0, 0);
         homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
+        homeGoalkeeper.visible = true;
+        camera.position.set(0, 5.6, HOME_GOAL_Z + 9);
+        camera.lookAt(0, 1.15, 27);
         finished = false;
       }
       if (penaltyOpponentActive) {
@@ -657,14 +660,20 @@ export function useFootballScene(
       } else {
         activePlayer.position.y = .1;
       }
-      cameraFocusZ = THREE.MathUtils.lerp(
-        cameraFocusZ,
-        THREE.MathUtils.clamp(ball.position.z, -FIELD_HALF_LENGTH + 10, FIELD_HALF_LENGTH - 10),
-        0.035,
-      );
-      cameraTargetPosition.set(0, cameraHeight, cameraFocusZ + cameraDistance);
-      camera.position.lerp(cameraTargetPosition, 0.06);
-      camera.lookAt(0, 0, cameraFocusZ - 8);
+      if (penaltyOpponentActive) {
+        cameraTargetPosition.set(0, 5.6, HOME_GOAL_Z + 9);
+        camera.position.lerp(cameraTargetPosition, .14);
+        camera.lookAt(0, 1.15, 27);
+      } else {
+        cameraFocusZ = THREE.MathUtils.lerp(
+          cameraFocusZ,
+          THREE.MathUtils.clamp(ball.position.z, -FIELD_HALF_LENGTH + 10, FIELD_HALF_LENGTH - 10),
+          0.035,
+        );
+        cameraTargetPosition.set(0, cameraHeight, cameraFocusZ + cameraDistance);
+        camera.position.lerp(cameraTargetPosition, 0.06);
+        camera.lookAt(0, 0, cameraFocusZ - 8);
+      }
       renderer.render(scene, camera);
       animationId = requestAnimationFrame(animate);
     };
