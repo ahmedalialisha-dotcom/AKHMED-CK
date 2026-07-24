@@ -16,6 +16,7 @@ type SceneEvents = {
   onOpponentDribble: (fromRestart: boolean) => void;
   onBallWon: () => void;
   onOpponentPass: () => void;
+  onKeeperClaim: (opponentKeeper: boolean) => void;
   onPrematch: (active: boolean) => void;
   onConcede: (scored: boolean) => void;
   onAttempt: (scored: boolean) => void;
@@ -204,6 +205,10 @@ export function useFootballScene(
       nextEnemyFeint = 0;
       nextEnemyPass = 0;
       enemyFeintUntil = 0;
+      goalkeeper.position.set(0, 0.1, KEEPER_Z);
+      goalkeeper.rotation.set(0, 0, 0);
+      homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
+      homeGoalkeeper.rotation.set(0, Math.PI, 0);
       defenders.forEach((defender, index) => {
         defender.position.set(OPPONENT_FORMATION[index][0], 0.1, OPPONENT_FORMATION[index][1]);
         defender.rotation.set(0, 0, 0);
@@ -224,6 +229,10 @@ export function useFootballScene(
         defender.position.set(OPPONENT_FORMATION[index][0], 0.1, OPPONENT_FORMATION[index][1]);
         defender.rotation.set(0, 0, 0);
       });
+      goalkeeper.position.set(0, 0.1, KEEPER_Z);
+      goalkeeper.rotation.set(0, 0, 0);
+      homeGoalkeeper.position.set(0, 0.1, HOME_KEEPER_Z);
+      homeGoalkeeper.rotation.set(0, Math.PI, 0);
       const carrier = defenders[6];
       carrier.position.set(0, 0.1, -2);
       ballVelocity.set(0, 0, 0);
@@ -552,6 +561,15 @@ export function useFootballScene(
         const goalkeeperTargetZ = playerOneOnOne ? GOAL_Z + 6.5 : KEEPER_Z;
         goalkeeper.position.z = THREE.MathUtils.lerp(goalkeeper.position.z, goalkeeperTargetZ, 0.055);
         goalkeeper.position.x = THREE.MathUtils.lerp(goalkeeper.position.x, THREE.MathUtils.clamp(ball.position.x * (playerOneOnOne ? .82 : .55), -3.4, 3.4), .12);
+        if (playerOneOnOne && goalkeeper.position.distanceTo(activePlayer.position) < 1.35) {
+          hasBall = false;
+          finished = true;
+          ballVelocity.set(0, 0, 0);
+          ball.position.copy(goalkeeper.position).setY(1.25);
+          goalkeeper.rotation.x = -.18;
+          events.onKeeperClaim(true);
+          resetTimer = window.setTimeout(trainingType ? reset : startOpponentPossession, 1400);
+        }
         goalkeeper.position.y = !hasBall && ball.position.z < GOAL_Z + 8 ? 0.1 + Math.sin(performance.now() / 80) * 0.55 : 0.1;
         const lowDive = !hasBall && ball.position.z < GOAL_Z + 8 && ball.position.y < 1.1;
         goalkeeper.rotation.z = lowDive ? THREE.MathUtils.clamp(-ball.position.x * .22, -.75, .75) : 0;
@@ -586,6 +604,17 @@ export function useFootballScene(
             THREE.MathUtils.clamp(ball.position.x * (enemyOneOnOne ? .82 : .55), -3.4, 3.4),
             .12,
           );
+          if (enemyOneOnOne && homeGoalkeeper.position.distanceTo(enemyCarrier.position) < 1.35) {
+            enemyCarrier = undefined;
+            enemyPassTarget = undefined;
+            enemyShot = false;
+            finished = true;
+            ballVelocity.set(0, 0, 0);
+            ball.position.copy(homeGoalkeeper.position).setY(1.25);
+            homeGoalkeeper.rotation.x = -.18;
+            events.onKeeperClaim(false);
+            resetTimer = window.setTimeout(reset, 1400);
+          }
         }
         if (!enemyShot && !hasBall && ball.position.z < GOAL_Z - 0.2 && !goalHandled) {
           goalHandled = true;
