@@ -50,10 +50,10 @@ export const createFootballer = (
   const shorts = new THREE.MeshStandardMaterial({ color: selectedColors[1] });
   const boot = new THREE.MeshStandardMaterial({ color: "#111218" });
   const body = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.43, 0.78, 5, 10),
+    new THREE.CylinderGeometry(0.38, 0.46, 1.05, 16),
     shirt,
   );
-  body.position.y = 1.35;
+  body.position.y = 1.4;
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 16, 16), skin);
   head.position.y = 2.25;
   const hairSeed = Number(number ?? (kind === "keeper" ? 1 : 7)) + (kind === "defender" ? 20 : 0);
