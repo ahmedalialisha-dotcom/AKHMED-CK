@@ -28,6 +28,7 @@ const createNumber = (value: string) => {
 export const createFootballer = (
   kind: "star" | "defender" | "keeper",
   number?: string,
+  kitColors?: [string, string],
 ) => {
   const player = new THREE.Group();
   const colors =
@@ -36,18 +37,19 @@ export const createFootballer = (
       : kind === "keeper"
         ? ["#f2b632", "#1d2532"]
         : ["#e9ece8", "#304070"];
+  const selectedColors = kitColors ?? colors;
   const shirt = new THREE.MeshStandardMaterial({
-    color: colors[0],
+    color: selectedColors[0],
     roughness: 0.7,
   });
   const stripe = new THREE.MeshStandardMaterial({
-    color: colors[1],
+    color: selectedColors[1],
     roughness: 0.7,
   });
   const skin = new THREE.MeshStandardMaterial({
     color: kind === "star" ? "#a65f42" : "#8c543d",
   });
-  const shorts = new THREE.MeshStandardMaterial({ color: kind === "star" ? "#244fa4" : "#10172e" });
+  const shorts = new THREE.MeshStandardMaterial({ color: selectedColors[1] });
   const boot = new THREE.MeshStandardMaterial({ color: "#111218" });
   const body = new THREE.Mesh(
     new THREE.CapsuleGeometry(0.43, 0.78, 5, 10),

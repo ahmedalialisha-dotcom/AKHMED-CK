@@ -10,12 +10,14 @@ type Props = {
   screen: MenuScreen;
   player: string;
   selectedTeam: string;
+  opponentTeam: string;
   userEmail?: string;
-  onStart: (mode: string) => void;
+  onStart: (mode: string, homeTeam?: string, awayTeam?: string) => void;
   onTournament: (name: string) => void;
   onScreen: (screen: NavigateScreen) => void;
   onPlayer: (name: string) => void;
   onTeam: (team: string) => void;
+  onOpponent: (team: string) => void;
 };
 
 export default function MainMenu(props: Props) {

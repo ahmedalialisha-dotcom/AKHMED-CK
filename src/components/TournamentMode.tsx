@@ -55,7 +55,7 @@ function Competition({ tournament, selectedTeam, teams, onExit }: Props & { sele
     setStage(ranking.findIndex(([team]) => team === selectedTeam) < 2 ? "semifinal" : "eliminated");
   };
   const restart = () => { setStage("groups"); setGroupRound(0); setPoints(createScores()); setGames(createScores()); setResults([]); setPlaying(false); };
-  if (playing) return <Football3D tournament={`${tournament} · ${selectedTeam} vs ${currentOpponent}`} onExit={() => setPlaying(false)} targetGoals={3} onMatchEnd={finishMatch} />;
+  if (playing) return <Football3D tournament={`${tournament} · ${selectedTeam} vs ${currentOpponent}`} homeTeam={selectedTeam} awayTeam={currentOpponent} onExit={() => setPlaying(false)} targetGoals={3} onMatchEnd={finishMatch} />;
 
   return (
     <main className="tournament-mode">

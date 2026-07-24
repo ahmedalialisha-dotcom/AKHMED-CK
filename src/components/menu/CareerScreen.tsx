@@ -2,14 +2,16 @@ import type { NavigateScreen } from "../MainMenu";
 import TeamPicker from "../TeamPicker";
 import { CLUB_TEAMS } from "../../lib/footballTeams";
 
-type Props = { player: string; selectedTeam: string; onStart: (mode: string) => void; onScreen: (screen: NavigateScreen) => void; onPlayer: (name: string) => void; onTeam: (team: string) => void };
+type Props = { player: string; selectedTeam: string; opponentTeam: string; onStart: (mode: string, homeTeam?: string, awayTeam?: string) => void; onScreen: (screen: NavigateScreen) => void; onPlayer: (name: string) => void; onTeam: (team: string) => void; onOpponent: (team: string) => void };
 const players = [
   { name: "Rayan", height: "175 см", role: "Дриблёр", number: "10" },
   { name: "Arman", height: "182 см", role: "Нападающий", number: "09" },
   { name: "Daniyar", height: "170 см", role: "Плеймейкер", number: "08" },
 ];
 
-export default function CareerScreen({ player, selectedTeam, onStart, onScreen, onPlayer, onTeam }: Props) {
+export default function CareerScreen({ player, selectedTeam, opponentTeam, onStart, onScreen, onPlayer, onTeam, onOpponent }: Props) {
+  const opponents = CLUB_TEAMS.filter((team) => team.name !== selectedTeam);
+  const safeOpponent = opponents.some((team) => team.name === opponentTeam) ? opponentTeam : opponents[0].name;
   return (
     <main className="surface-page">
       <header className="surface-page__bar"><button className="back-button" onClick={() => onScreen("menu")}>← Назад</button><span className="brand brand--dark"><i>F3</i><strong>FOOTBALL 3D</strong></span></header>
@@ -31,8 +33,10 @@ export default function CareerScreen({ player, selectedTeam, onStart, onScreen, 
       <section className="career-team">
         <div><p className="section-label">ТВОЙ КЛУБ</p><h2>Выбери команду карьеры</h2></div>
         <TeamPicker teams={CLUB_TEAMS} selected={selectedTeam} onSelect={onTeam} />
+        <div className="opponent-select"><p className="section-label">ПЕРВЫЙ СОПЕРНИК</p><h2>Выбери соперника</h2></div>
+        <TeamPicker teams={opponents} selected={safeOpponent} onSelect={onOpponent} />
       </section>
-      <button className="primary-action" onClick={() => onStart(`Карьера: ${player} · ${selectedTeam}`)}>Начать карьеру за {selectedTeam} <span>→</span></button>
+      <button className="primary-action" onClick={() => onStart(`Карьера: ${player} · ${selectedTeam} vs ${safeOpponent}`, selectedTeam, safeOpponent)}>Начать карьеру за {selectedTeam} <span>→</span></button>
     </main>
   );
 }

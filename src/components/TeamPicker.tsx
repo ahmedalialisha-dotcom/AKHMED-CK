@@ -16,7 +16,8 @@ export default function TeamPicker({ teams, selected, onSelect }: Props) {
           onClick={() => onSelect(team.name)}
         >
           <b>{team.badge}</b>
-          <span>{team.name}</span>
+          <span>{team.name}<small>Рейтинг {team.rating}</small></span>
+          <em><u style={{ background: team.colors[0] }} /><u style={{ background: team.colors[1] }} /></em>
           <i>{selected === team.name ? "✓" : ""}</i>
         </button>
       ))}
