@@ -9,13 +9,19 @@ const positions = [
 ];
 const shirtNumbers = ["1", "2", "3", "4", "5", "6", "8", "10", "7", "9", "11"];
 
-export default function FormationPreview() {
+type Props = {
+  teamName?: string;
+  opponent?: boolean;
+};
+
+export default function FormationPreview({ teamName = "FOOTBALL 3D", opponent = false }: Props) {
   return (
-    <div className="formation-card">
+    <div className={opponent ? "formation-card formation-card--opponent" : "formation-card"}>
       <div className="formation-card__heading">
-        <span>СТАРТОВЫЙ СОСТАВ</span>
+        <span>{opponent ? "СОПЕРНИК" : "ВАША КОМАНДА"}</span>
         <strong>4–3–2–1</strong>
       </div>
+      <h3>{teamName}</h3>
       <div className="formation-preview" aria-label="Схема команды 4-3-2-1">
       {positions.map(([left, top], index) => (
         <span
@@ -27,7 +33,7 @@ export default function FormationPreview() {
         </span>
       ))}
       </div>
-      <small>КАПИТАН · №11</small>
+      <small>{opponent ? "СОСТАВ СОПЕРНИКА" : "КАПИТАН · №11"}</small>
     </div>
   );
 }

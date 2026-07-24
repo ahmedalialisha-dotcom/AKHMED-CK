@@ -103,7 +103,11 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pen
         <div ref={mountRef} className="three-game__canvas" aria-label="3D футбольное поле" />
         {prematch && <div className="prematch-show">
           <div className="prematch-show__intro"><span>FOOTBALL 3D</span><h2>КОМАНДЫ ВЫХОДЯТ НА ПОЛЕ</h2><p>{tournament} · 11 НА 11</p></div>
-          <FormationPreview />
+          <div className="prematch-formations">
+            <FormationPreview teamName={homeTeam} />
+            <b className="prematch-formations__vs">VS</b>
+            <FormationPreview teamName={awayTeam ?? "СОПЕРНИК"} opponent />
+          </div>
           <i />
         </div>}
       </div>
