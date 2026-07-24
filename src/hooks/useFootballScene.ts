@@ -301,7 +301,9 @@ export function useFootballScene(
         activePlayer.position.z = THREE.MathUtils.clamp(activePlayer.position.z, -FIELD_HALF_LENGTH + 2, FIELD_HALF_LENGTH - 2);
         const opponentPossession = Boolean(enemyCarrier || enemyPassTarget || enemyShot);
         const defendingTarget = enemyCarrier?.position ?? ball.position;
-        const availableTeamDefenders = teamPlayers.filter((footballer) => footballer !== activePlayer);
+        const availableTeamDefenders = teamPlayers.filter((footballer, index) =>
+          footballer !== activePlayer && index > 4,
+        );
         const teamPressingPlayer = availableTeamDefenders.reduce<THREE.Group | undefined>((nearest, footballer) =>
           !nearest || footballer.position.distanceTo(defendingTarget) < nearest.position.distanceTo(defendingTarget)
             ? footballer : nearest, undefined);

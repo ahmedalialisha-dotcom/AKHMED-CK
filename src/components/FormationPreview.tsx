@@ -7,6 +7,7 @@ const positions = [
   [35, 36], [65, 36],
   [50, 15],
 ];
+const shirtNumbers = ["1", "2", "3", "4", "5", "6", "8", "10", "7", "9", "11"];
 
 export default function FormationPreview() {
   return (
@@ -22,7 +23,7 @@ export default function FormationPreview() {
           key={`${left}-${top}`}
           style={{ left: `${left}%`, top: `${top}%`, "--player-delay": `${0.75 + index * 0.08}s` } as CSSProperties}
         >
-          {index === 10 ? "11" : index === 0 ? "В" : ""}
+          {shirtNumbers[index]}
         </span>
       ))}
       </div>

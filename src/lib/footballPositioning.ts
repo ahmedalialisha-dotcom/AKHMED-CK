@@ -16,10 +16,16 @@ export function moveToPosition(
 export function teamAttackPosition(index: number, carrier: THREE.Group) {
   const lane = (index % 5 - 2) * 7.5;
   const row = Math.floor(index / 5);
+  const isDefender = index >= 1 && index <= 4;
+  const targetZ = THREE.MathUtils.clamp(
+    carrier.position.z - 6 + row * 8,
+    -FIELD_HALF_LENGTH + 4,
+    FIELD_HALF_LENGTH - 3,
+  );
   return new THREE.Vector3(
     THREE.MathUtils.clamp(lane + carrier.position.x * 0.28, -FIELD_HALF_WIDTH + 2, FIELD_HALF_WIDTH - 2),
     0.1,
-    THREE.MathUtils.clamp(carrier.position.z - 6 + row * 8, -FIELD_HALF_LENGTH + 4, FIELD_HALF_LENGTH - 3),
+    isDefender ? Math.max(1, targetZ) : targetZ,
   );
 }
 
