@@ -10,11 +10,11 @@ const shopSigns = [
 ] as const;
 
 const createSign = (text: string) => {
-  const canvas = document.createElement("canvas"); canvas.width = 512; canvas.height = 100;
+  const canvas = document.createElement("canvas"); canvas.width = 768; canvas.height = 150;
   const context = canvas.getContext("2d");
-  if (context) { context.fillStyle = "#102c24"; context.roundRect(0, 0, 512, 100, 18); context.fill(); context.fillStyle = "#f4d36b"; context.font = "bold 38px Arial"; context.textAlign = "center"; context.fillText(text, 256, 64); }
+  if (context) { context.fillStyle = "#102c24"; context.roundRect(0, 0, 768, 150, 24); context.fill(); context.strokeStyle = "#f4d36b"; context.lineWidth = 8; context.stroke(); context.fillStyle = "#fff4c7"; context.font = "bold 56px Arial"; context.textAlign = "center"; context.fillText(text, 384, 96); }
   const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(canvas), transparent: true }));
-  sprite.scale.set(6.6, 1.3, 1); return sprite;
+  sprite.scale.set(10.5, 2.05, 1); return sprite;
 };
 
 const addAccessories = (player: THREE.Group, equipped: string[]) => {
@@ -55,7 +55,7 @@ export function useOpenWorldScene(mountRef: React.RefObject<HTMLDivElement>, pos
       const house = new THREE.Mesh(new THREE.BoxGeometry(13, height, 13), new THREE.MeshStandardMaterial({ color: colors[(Math.abs(x / 24) + Math.abs(z / 24)) % colors.length], roughness: .8 }));
       house.position.set(x + 10, height / 2, z + 10); house.castShadow = true; scene.add(house);
     }
-    shopSigns.forEach(([name, x, z]) => { const sign = createSign(name); sign.position.set(x, 5.5, z); scene.add(sign); });
+    shopSigns.forEach(([name, x, z]) => { const sign = createSign(name); sign.position.set(x, 7.2, z); scene.add(sign); });
     const displayCars = [createCar("#dc2929"), createCar("#2468c9")]; displayCars[0].position.set(18, 0, -3); displayCars[1].position.set(18, 0, 3); scene.add(...displayCars);
     const playerCar = createCar("#d8a938"); playerCar.visible = driving; scene.add(playerCar);
     const scissors = new THREE.Group();

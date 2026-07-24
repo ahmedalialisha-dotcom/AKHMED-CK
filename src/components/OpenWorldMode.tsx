@@ -26,6 +26,7 @@ const wrap = (value: number) => value > 58 ? -58 : value < -58 ? 58 : value;
 export default function OpenWorldMode(props: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const keys = useRef(new Set<string>());
+  const movementSpeed = useRef(0);
   const [position, setPosition] = useState<WorldPosition>({ x: 0, z: 0, heading: 0 });
   const [hunger, setHunger] = useState(72);
   const [cutting, setCutting] = useState(false);
@@ -44,10 +45,14 @@ export default function OpenWorldMode(props: Props) {
       setPosition((current) => {
         const turn = Number(keys.current.has("KeyA")) - Number(keys.current.has("KeyD"));
         const direction = Number(keys.current.has("KeyW")) - Number(keys.current.has("KeyS"));
-        const heading = current.heading + turn * .075;
-        if (!direction || cutting) return { ...current, heading };
         const boost = keys.current.has("KeyQ") ? 1.65 : 1;
-        const speed = (driving ? .72 : .26) * boost * direction;
+        const maximumSpeed = (driving ? .78 : .28) * boost;
+        const desiredSpeed = cutting ? 0 : direction * maximumSpeed;
+        movementSpeed.current += (desiredSpeed - movementSpeed.current) * (direction ? .18 : .12);
+        const steering = driving ? .048 * Math.min(1, Math.abs(movementSpeed.current) * 2.2) : .078;
+        const heading = current.heading + turn * steering * (movementSpeed.current < 0 ? -1 : 1);
+        if (Math.abs(movementSpeed.current) < .006) return { ...current, heading };
+        const speed = movementSpeed.current;
         setHunger((value) => Math.max(0, value - (driving ? .01 : .025)));
         return { x: wrap(current.x + Math.sin(heading) * speed), z: wrap(current.z - Math.cos(heading) * speed), heading };
       });
@@ -73,7 +78,7 @@ export default function OpenWorldMode(props: Props) {
         <section className="world-stage">
           <div ref={mountRef} className="world-canvas" />
           <div className="world-legend">{places.map((place) => <span key={place.id}>{place.icon} {place.name}</span>)}</div>
-          <div className="world-mobile"><MobileJoystick /><button onPointerDown={() => sendMobileKey("KeyQ", true)} onPointerUp={() => sendMobileKey("KeyQ", false)}>БЕГ</button></div>
+          <div className="world-mobile"><MobileJoystick /><button onPointerDown={() => sendMobileKey("KeyQ", true)} onPointerUp={() => sendMobileKey("KeyQ", false)} onPointerCancel={() => sendMobileKey("KeyQ", false)} onPointerLeave={() => sendMobileKey("KeyQ", false)}>{driving ? "ТУРБО" : "БЕГ"}</button></div>
           {nearby && !cutting && <button className="world-interact" onClick={interact}>{nearby.id === "cafe" ? "Поесть · 30 ●" : nearby.id === "barber" ? "Выбрать стрижку ✂️" : `Войти: ${nearby.name}`}</button>}
           {(ownsCar || nearby?.id === "cars" || driving) && <button className="world-drive" onClick={() => setDriving((value) => !value)}>{driving ? "Выйти из машины" : ownsCar ? "Сесть в машину" : "Тест-драйв"}</button>}
           {choosingHair && <div className="barber-menu"><h2>Выбери причёску</h2>{HAIR_STYLES.map((style) => <button onClick={() => chooseHair(style.value)} key={style.value}><b>{style.icon}</b>{style.label}</button>)}<button onClick={() => setChoosingHair(false)}>Отмена</button></div>}
