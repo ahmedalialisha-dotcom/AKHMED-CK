@@ -3,20 +3,19 @@ import type { NavigateScreen } from "../MainMenu";
 
 type Props = {
   userEmail?: string;
-  onStart: (mode: string) => void;
   onScreen: (screen: NavigateScreen) => void;
 };
 
 const actions = [
-  { icon: "⚡", title: "Быстрый матч", text: "Сразу выйти на поле", action: "match" },
+  { icon: "⚡", title: "Быстрый матч", text: "Выбрать клуб и выйти на поле", action: "quick" },
   { icon: "◎", title: "Серия пенальти", text: "Пять ударов до победы", action: "penalty" },
   { icon: "★", title: "Карьера", text: "Создать своего игрока", action: "career" },
   { icon: "◆", title: "Турниры", text: "Выбрать большое событие", action: "settings" },
 ];
 
-export default function HomeMenu({ userEmail, onStart, onScreen }: Props) {
+export default function HomeMenu({ userEmail, onScreen }: Props) {
   const selectAction = (action: string) => {
-    if (action === "match") onStart("Быстрый матч");
+    if (action === "quick") onScreen("quick");
     else onScreen(action as "penalty" | "career" | "settings");
   };
 
