@@ -10,6 +10,7 @@ export type NavigateScreen = MenuScreen | "auth" | "profile";
 type Props = {
   screen: MenuScreen;
   player: string;
+  playerAge: number;
   selectedTeam: string;
   opponentTeam: string;
   userEmail?: string;
@@ -17,6 +18,7 @@ type Props = {
   onTournament: (name: string) => void;
   onScreen: (screen: NavigateScreen) => void;
   onPlayer: (name: string) => void;
+  onPlayerAge: (age: number) => void;
   onTeam: (team: string) => void;
   onOpponent: (team: string) => void;
   onPenalty: (homeTeam: string, awayTeam: string) => void;

@@ -5,6 +5,7 @@ import { addDayStadium, createFootballer } from "../lib/footballStadium";
 import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, GOAL_Z, HOME_GOAL_Z, HOME_KEEPER_Z, KEEPER_Z, OPPONENT_FORMATION, PENALTY_START_Z, PLAYER_START_Z, TEAM_FORMATION } from "../lib/footballField";
 import { coverPosition, moveToPosition, opponentAttackPosition, opponentDefensePosition, teamAttackPosition, teamDefensePosition } from "../lib/footballPositioning";
 import { findTeam } from "../lib/footballTeams";
+import { getCareerStats } from "../lib/careerPlayer";
 
 type SceneEvents = {
   onGoal: () => void;
@@ -30,6 +31,7 @@ export function useFootballScene(
   homeTeam?: string,
   awayTeam?: string,
   opponentShotKey = 0,
+  playerAge?: number,
 ) {
   const canShootRef = useRef(canShoot);
   const opponentShotKeyRef = useRef(opponentShotKey);
@@ -47,6 +49,10 @@ export function useFootballScene(
     const awayColors = awayData?.colors;
     const homeStrength = (homeData?.rating ?? 82) / 85;
     const awayStrength = (awayData?.rating ?? 82) / 85;
+    const careerStats = getCareerStats(playerAge ?? 24);
+    const careerSpeed = playerAge ? careerStats.speed / 85 : 1;
+    const careerTechnique = playerAge ? careerStats.technique / 85 : 1;
+    const careerStamina = playerAge ? careerStats.stamina / 85 : 1;
     const camera = new THREE.PerspectiveCamera(58, 1, 0.1, 240);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -350,7 +356,7 @@ export function useFootballScene(
         }
       } else if (!finished && matchStarted) {
         const sprinting = keys.has("KeyQ") && keys.has("KeyW") && stamina > 0;
-        stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 : 7) * delta, 0, 100);
+        stamina = THREE.MathUtils.clamp(stamina + (sprinting ? -15 / careerStamina : 7 * careerStamina) * delta, 0, 100);
         if (performance.now() - statsTimer > 80) { events.onStats(chargeStarted ? THREE.MathUtils.clamp((performance.now() - chargeStarted) / 9, 0, 100) : 0); events.onStamina(stamina); statsTimer = performance.now(); }
         if (keys.has("KeyA")) activePlayer.rotation.y += 2.5 * delta;
         if (keys.has("KeyD")) activePlayer.rotation.y -= 2.5 * delta;
@@ -359,7 +365,7 @@ export function useFootballScene(
           .set(0, 0, -1)
           .applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         if (!penalty && keys.has("KeyW"))
-          activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * homeStrength * delta);
+          activePlayer.position.addScaledVector(forward, (sprinting ? 8.4 : 5.6) * homeStrength * careerSpeed * delta);
         if (!penalty && keys.has("KeyS"))
           activePlayer.position.addScaledVector(forward, -3.8 * delta);
         activePlayer.position.x = THREE.MathUtils.clamp(activePlayer.position.x, -FIELD_HALF_WIDTH + 1.5, FIELD_HALF_WIDTH - 1.5);
@@ -570,7 +576,7 @@ export function useFootballScene(
           goalHandled = true;
           finished = true;
           const saved = !curvedShot && Math.abs(ball.position.x - goalkeeper.position.x) < .55 * awayStrength;
-          const onTarget = curvedShot || Math.random() < THREE.MathUtils.clamp(.62 + homeStrength * .18, .72, .86);
+          const onTarget = curvedShot || Math.random() < THREE.MathUtils.clamp(.58 + homeStrength * .15 + careerTechnique * .1, .7, .9);
           if (onTarget && Math.abs(ball.position.x) < 4.5 && !saved) {
             sounds.playGoal();
             events.onGoal();
@@ -640,5 +646,5 @@ export function useFootballScene(
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [awayTeam, events, homeTeam, mountRef, penalty, resetKey]);
+  }, [awayTeam, events, homeTeam, mountRef, penalty, playerAge, resetKey]);
 }

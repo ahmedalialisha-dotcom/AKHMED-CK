@@ -6,8 +6,8 @@ import MobileControls from "./MobileControls";
 import FormationPreview from "./FormationPreview";
 import "../football3d.css";
 
-type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
-export default function Football3D({ onExit, tournament, homeTeam, awayTeam, penalty = false, targetGoals, onMatchEnd }: Props) {
+type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; playerAge?: number; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
+export default function Football3D({ onExit, tournament, homeTeam, awayTeam, playerAge, penalty = false, targetGoals, onMatchEnd }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState(
     "Веди мяч, не подпускай защитников и пробей мимо вратаря.",
@@ -78,7 +78,7 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pen
     [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey);
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge);
 
   const shownMessage = penalty ? shootout.message : message;
   const shownGoals = penalty ? shootout.playerGoals : goals;
