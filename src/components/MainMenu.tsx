@@ -7,7 +7,7 @@ import ShopScreen, { type ShopItem } from "./menu/ShopScreen";
 import type { HairStyle } from "../lib/footballHair";
 
 export type MenuScreen = "menu" | "quick" | "penaltySelect" | "career" | "settings" | "shop";
-export type NavigateScreen = MenuScreen | "auth" | "profile";
+export type NavigateScreen = MenuScreen | "openWorld" | "auth" | "profile";
 
 type Props = {
   screen: MenuScreen;
@@ -26,6 +26,7 @@ type Props = {
   onPlayerAge: (age: number) => void;
   onHair: (style: HairStyle) => void;
   onBuy: (item: ShopItem) => void;
+  onShopBack: () => void;
   onTeam: (team: string) => void;
   onOpponent: (team: string) => void;
   onPenalty: (homeTeam: string, awayTeam: string) => void;

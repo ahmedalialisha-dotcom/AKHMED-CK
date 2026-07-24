@@ -12,12 +12,13 @@ const actions = [
   { icon: "★", title: "Карьера", text: "Создать своего игрока", action: "career" },
   { icon: "◆", title: "Турниры", text: "Выбрать большое событие", action: "settings" },
   { icon: "▣", title: "Магазин", text: "Телефоны, бутсы и аксессуары", action: "shop" },
+  { icon: "⌂", title: "Открытый мир", text: "Город, кафе и твои вещи", action: "openWorld" },
 ];
 
 export default function HomeMenu({ userEmail, onScreen }: Props) {
   const selectAction = (action: string) => {
     if (action === "quick") onScreen("quick");
-    else onScreen(action as "penaltySelect" | "career" | "settings" | "shop");
+    else onScreen(action as "penaltySelect" | "career" | "settings" | "shop" | "openWorld");
   };
 
   return (
