@@ -22,11 +22,13 @@ export function usePenaltyShootout() {
     setPlayerGoals(current.playerGoals + Number(scored));
     setPlayerAttempts(current.playerAttempts + 1);
     setTurn("opponent");
-    setMessage(`${scored ? "ГОООЛ!" : "Не забили."} Соперник готовится к удару…`);
-    timers.current.push(window.setTimeout(() => {
-      setMessage("Соперник разбегается и бьёт!");
-      setOpponentShotKey((value) => value + 1);
-    }, NEXT_SHOT_DELAY));
+    setMessage(`${scored ? "ГОООЛ!" : "Не забили."} Вы в воротах: выберите угол — 3…`);
+    setOpponentShotKey((value) => value + 1);
+    timers.current.push(
+      window.setTimeout(() => setMessage("Выберите угол прыжка — 2…"), 1000),
+      window.setTimeout(() => setMessage("Последняя секунда — 1…"), 2000),
+      window.setTimeout(() => setMessage("УДАР! Вратарь прыгает в выбранный угол!"), 3000),
+    );
   }, []);
 
   const recordOpponentShot = useCallback((scored: boolean) => {

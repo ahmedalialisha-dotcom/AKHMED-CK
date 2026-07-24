@@ -340,6 +340,7 @@ export function useFootballScene(
         handledOpponentShot = opponentShotKeyRef.current;
         penaltyOpponentActive = true;
         penaltyOpponentKicked = false;
+        queuedKeeperDive = 0;
         penaltyOpponentStarted = performance.now();
         const shotZones = [-2.8, 0, 2.8];
         penaltyOpponentTargetX = shotZones[Math.floor(Math.random() * shotZones.length)];
@@ -359,7 +360,7 @@ export function useFootballScene(
         if (!penaltyOpponentKicked) {
           penaltyOpponent.position.z = Math.min(25.5, 22 + elapsed * 0.0045);
           ball.position.set(0, 0.31, 26.1);
-          if (elapsed > 780) {
+          if (elapsed > 3000) {
             penaltyOpponentKicked = true;
             const shotZone = Math.sign(penaltyOpponentTargetX);
             const accurate = Math.random() < THREE.MathUtils.clamp(.78 + (awayStrength - 1) * .35, .65, .94);
