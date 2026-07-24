@@ -113,13 +113,15 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
     [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onKeeperClaim, onPrematch, onConcede, onAttempt, onOpponentPenalty, onTrainingAction],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge, trainingType, hairStyle);
+  const kickerOrder = ["11", "10", "9", "8", "7", "6", "5", "4", "3", "2", "1"];
+  const kickerNumber = kickerOrder[shootout.playerAttempts % kickerOrder.length];
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge, trainingType, hairStyle, kickerNumber);
 
   const shownMessage = penalty ? shootout.message : message;
   const shownGoals = penalty ? shootout.playerGoals : goals;
-  const attemptLabel = shootout.playerAttempts < 5
-    ? `${shootout.playerAttempts + 1}/5`
-    : `доп. ${shootout.playerAttempts - 4}`;
+  const attemptLabel = shootout.playerAttempts < 11
+    ? `${shootout.playerAttempts + 1}/11`
+    : `доп. ${shootout.playerAttempts - 10}`;
 
   return (
     <main className={`three-game ${isPhone ? "three-game--phone" : "three-game--desktop"}`}>
@@ -148,15 +150,16 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
           </div>
           <i />
         </div>}
+        {penalty && shootout.turn === "finished" && shootout.playerGoals > shootout.opponentGoals && <div className="penalty-victory"><div className="penalty-victory__trophy">🏆</div><h2>ПОБЕДА!</h2><p>{homeTeam} выигрывает серию пенальти</p>{Array.from({ length: 14 }, (_, index) => <i key={index} style={{ "--confetti": index } as React.CSSProperties} />)}</div>}
       </div>
       <div className="match-hud"><div><span>СИЛА УДАРА</span><i><b style={{ width: `${power}%` }} /></i></div><div><span>ВЫНОСЛИВОСТЬ</span><i className="stamina"><b style={{ width: `${stamina}%` }} /></i></div></div>
       {penalty && <div className="penalty-timing"><span>СЛИШКОМ СЛАБО</span><b>50 / 50</b><strong>ТОЧНО</strong></div>}
       {isPhone && <MobileControls penalty={penalty} />}
       <section className={`how-to ${isPhone ? "how-to--phone" : ""}`}>
         <h2>Управление</h2>
-        {isPhone ? <p>Отклоняй стик для движения и удерживай отдельную кнопку «БЕГ» для ускорения. Кнопку «УДАР» удерживай для выбора силы и отпусти, чтобы пробить.</p> : <>
+        {isPhone ? <p>{penalty ? "Во время удара соперника отклони стик влево или вправо. Выбор запомнится, а вратарь прыгнет только в момент удара. Не отклоняй стик, чтобы остаться по центру." : "Отклоняй стик для движения и удерживай отдельную кнопку «БЕГ» для ускорения. Кнопку «УДАР» удерживай для выбора силы и отпусти, чтобы пробить."}</p> : <>
         <div className="how-to__keys">
-          <p>{penalty ? <><kbd>A</kbd> <kbd>D</kbd> выбрать угол · удерживай <kbd>Space</kbd> и отпусти в зелёной зоне</> : <><kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад</>}</p>
+          <p>{penalty ? <><kbd>A</kbd>/<kbd>Ф</kbd> влево · <kbd>D</kbd>/<kbd>В</kbd> вправо · ничего — центр</> : <><kbd>W</kbd> бежать вперёд <kbd>S</kbd> назад</>}</p>
           <p>
             <kbd>A</kbd> <kbd>D</kbd> поворачивать игрока
           </p>

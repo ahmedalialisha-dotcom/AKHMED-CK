@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
-const NEXT_SHOT_DELAY = 2000;
+const NEXT_SHOT_DELAY = 3000;
 
 export function usePenaltyShootout() {
   const [playerGoals, setPlayerGoals] = useState(0);
@@ -38,7 +38,7 @@ export function usePenaltyShootout() {
     const nextOpponentAttempts = current.opponentAttempts + 1;
     setOpponentGoals(nextOpponentGoals);
     setOpponentAttempts(nextOpponentAttempts);
-    const minimumFinished = nextPlayerAttempts >= 5 && nextOpponentAttempts >= 5;
+    const minimumFinished = nextPlayerAttempts >= 11 && nextOpponentAttempts >= 11;
     if (minimumFinished && nextPlayerGoals !== nextOpponentGoals) {
       const won = nextPlayerGoals > nextOpponentGoals;
       setTurn("finished");

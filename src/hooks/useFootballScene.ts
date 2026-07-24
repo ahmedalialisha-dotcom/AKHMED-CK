@@ -38,6 +38,7 @@ export function useFootballScene(
   playerAge?: number,
   trainingType?: TrainingType,
   hairStyle?: HairStyle,
+  kickerNumber = "11",
 ) {
   const canShootRef = useRef(canShoot);
   const opponentShotKeyRef = useRef(opponentShotKey);
@@ -64,7 +65,7 @@ export function useFootballScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     mount.appendChild(renderer.domElement);
-    const player = createFootballer("star", "11", homeColors, hairStyle);
+    const player = createFootballer("star", kickerNumber, homeColors, hairStyle);
     player.position.set(0, 0.1, penalty ? PENALTY_START_Z : PLAYER_START_Z);
     scene.add(player);
     const teammates = penalty ? [] : TEAM_FORMATION.map(([x, z], index) => {
@@ -142,6 +143,8 @@ export function useFootballScene(
     let penaltyOpponentStarted = 0;
     let penaltyOpponentWillScore = false;
     let penaltyOpponentTargetX = 0;
+    let queuedKeeperDive = 0;
+    let opponentKeeperDiveZone = 0;
     let matchStarted = penalty || Boolean(trainingType);
     let sprintTrainingTime = 0;
     let sprintTrainingDone = false;
@@ -257,6 +260,10 @@ export function useFootballScene(
         event.preventDefault();
       sounds.startCrowd();
       keys.add(event.code);
+      if (penalty && !canShootRef.current && !penaltyOpponentKicked) {
+        if (event.code === "KeyA") queuedKeeperDive = -1;
+        if (event.code === "KeyD") queuedKeeperDive = 1;
+      }
       if (event.code === "KeyR" && canShootRef.current && matchStarted) reset();
       if (event.code === "KeyC" && !penalty && (enemyCarrier || enemyShot)) {
         const currentIndex = teamPlayers.indexOf(activePlayer);
@@ -270,6 +277,7 @@ export function useFootballScene(
       if (["KeyF", "KeyG", "KeyH"].includes(event.code) && hasBall && !finished && canShootRef.current && matchStarted) {
         const style = event.code;
         curvedShot = style === "KeyF";
+        opponentKeeperDiveZone = [-1, 0, 1][Math.floor(Math.random() * 3)];
         hasBall = false;
         const side = 0;
         const lift = style === "KeyG" ? .26 : style === "KeyH" ? .16 : .25;
@@ -284,6 +292,7 @@ export function useFootballScene(
       if (event.code === "Space" && chargeStarted && hasBall && !finished && canShootRef.current) {
         const power = THREE.MathUtils.clamp((performance.now() - chargeStarted) / 900, .2, 1);
         hasBall = false;
+        opponentKeeperDiveZone = [-1, 0, 1][Math.floor(Math.random() * 3)];
         ballVelocity.set(0, .07 + power * .28, -(.55 + power * 1.25)).applyAxisAngle(new THREE.Vector3(0, 1, 0), activePlayer.rotation.y);
         chargeStarted = 0; sounds.playKick();
       }
@@ -332,9 +341,9 @@ export function useFootballScene(
         penaltyOpponentActive = true;
         penaltyOpponentKicked = false;
         penaltyOpponentStarted = performance.now();
-        penaltyOpponentTargetX = THREE.MathUtils.randFloat(-3.3, 3.3);
-        const scoringChance = THREE.MathUtils.clamp(0.68 + (awayStrength - homeStrength) * 0.45, 0.42, 0.86);
-        penaltyOpponentWillScore = Math.random() < scoringChance;
+        const shotZones = [-2.8, 0, 2.8];
+        penaltyOpponentTargetX = shotZones[Math.floor(Math.random() * shotZones.length)];
+        penaltyOpponentWillScore = true;
         penaltyOpponent.position.set(0, 0.1, 22);
         penaltyOpponent.rotation.y = Math.PI;
         penaltyOpponent.visible = true;
@@ -352,7 +361,10 @@ export function useFootballScene(
           ball.position.set(0, 0.31, 26.1);
           if (elapsed > 780) {
             penaltyOpponentKicked = true;
-            const targetX = penaltyOpponentWillScore ? penaltyOpponentTargetX : THREE.MathUtils.randFloat(-1.2, 1.2);
+            const shotZone = Math.sign(penaltyOpponentTargetX);
+            const accurate = Math.random() < THREE.MathUtils.clamp(.78 + (awayStrength - 1) * .35, .65, .94);
+            penaltyOpponentWillScore = accurate && queuedKeeperDive !== shotZone;
+            const targetX = accurate ? penaltyOpponentTargetX : Math.sign(penaltyOpponentTargetX || (Math.random() - .5)) * 5.2;
             ballVelocity.set(targetX - ball.position.x, 0.1, HOME_GOAL_Z - ball.position.z).normalize().multiplyScalar(1.25 * awayStrength);
             ballVelocity.y = 0.12;
             sounds.playKick();
@@ -360,7 +372,7 @@ export function useFootballScene(
         } else {
           ball.position.add(ballVelocity);
           ballVelocity.y -= 0.01;
-          const keeperTarget = penaltyOpponentWillScore ? -Math.sign(penaltyOpponentTargetX || 1) * 2.2 : penaltyOpponentTargetX;
+          const keeperTarget = queuedKeeperDive * 2.8;
           homeGoalkeeper.position.x = THREE.MathUtils.lerp(homeGoalkeeper.position.x, keeperTarget, 0.09 * homeStrength);
           homeGoalkeeper.position.y = 0.1 + Math.abs(homeGoalkeeper.position.x) * 0.16;
           homeGoalkeeper.rotation.z = -homeGoalkeeper.position.x * 0.22;
@@ -368,6 +380,7 @@ export function useFootballScene(
             penaltyOpponentActive = false;
             finished = true;
             events.onOpponentPenalty(penaltyOpponentWillScore);
+            queuedKeeperDive = 0;
           }
         }
       } else if (!finished && matchStarted) {
@@ -560,7 +573,11 @@ export function useFootballScene(
         const playerOneOnOne = hasBall && activePlayer.position.z < GOAL_Z + 15 && nearestOpponent > 3.8;
         const goalkeeperTargetZ = playerOneOnOne ? GOAL_Z + 6.5 : KEEPER_Z;
         goalkeeper.position.z = THREE.MathUtils.lerp(goalkeeper.position.z, goalkeeperTargetZ, 0.055);
-        goalkeeper.position.x = THREE.MathUtils.lerp(goalkeeper.position.x, THREE.MathUtils.clamp(ball.position.x * (playerOneOnOne ? .82 : .55), -3.4, 3.4), .12);
+        const opponentKeeperTargetX = penalty && !hasBall
+          ? opponentKeeperDiveZone * 2.8
+          : THREE.MathUtils.clamp(ball.position.x * (playerOneOnOne ? .82 : .55), -3.4, 3.4);
+        goalkeeper.position.x = THREE.MathUtils.lerp(goalkeeper.position.x, opponentKeeperTargetX, penalty && !hasBall ? .09 : .12);
+        if (penalty && !hasBall) goalkeeper.rotation.z = -goalkeeper.position.x * .22;
         if (playerOneOnOne && goalkeeper.position.distanceTo(activePlayer.position) < 1.35) {
           hasBall = false;
           finished = true;
@@ -692,5 +709,5 @@ export function useFootballScene(
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [awayTeam, events, hairStyle, homeTeam, mountRef, penalty, playerAge, resetKey, trainingType]);
+  }, [awayTeam, events, hairStyle, homeTeam, kickerNumber, mountRef, penalty, playerAge, resetKey, trainingType]);
 }
