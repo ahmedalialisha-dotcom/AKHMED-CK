@@ -1,15 +1,17 @@
 import type { NavigateScreen } from "../MainMenu";
 import TeamPicker from "../TeamPicker";
 import { CLUB_TEAMS } from "../../lib/footballTeams";
+import HairPicker from "../HairPicker";
+import type { HairStyle } from "../../lib/footballHair";
 
-type Props = { player: string; playerAge: number; selectedTeam: string; onCareer: () => void; onScreen: (screen: NavigateScreen) => void; onPlayer: (name: string) => void; onPlayerAge: (age: number) => void; onTeam: (team: string) => void };
+type Props = { player: string; playerAge: number; hairStyle: HairStyle; selectedTeam: string; onCareer: () => void; onScreen: (screen: NavigateScreen) => void; onPlayer: (name: string) => void; onPlayerAge: (age: number) => void; onHair: (style: HairStyle) => void; onTeam: (team: string) => void };
 const players = [
   { name: "Rayan", age: 18, height: "175 см", role: "Дриблёр", number: "10" },
   { name: "Arman", age: 24, height: "182 см", role: "Нападающий", number: "09" },
   { name: "Daniyar", age: 31, height: "170 см", role: "Плеймейкер", number: "08" },
 ];
 
-export default function CareerScreen({ player, playerAge, selectedTeam, onCareer, onScreen, onPlayer, onPlayerAge, onTeam }: Props) {
+export default function CareerScreen({ player, playerAge, hairStyle, selectedTeam, onCareer, onScreen, onPlayer, onPlayerAge, onHair, onTeam }: Props) {
   return (
     <main className="surface-page">
       <header className="surface-page__bar"><button className="back-button" onClick={() => onScreen("menu")}>← Назад</button><span className="brand brand--dark"><i>F3</i><strong>FOOTBALL 3D</strong></span></header>
@@ -24,10 +26,10 @@ export default function CareerScreen({ player, playerAge, selectedTeam, onCareer
           <label>Возраст<select value={playerAge} onChange={(event) => onPlayerAge(Number(event.target.value))}>{Array.from({ length: 25 }, (_, index) => index + 16).map((age) => <option value={age} key={age}>{age} лет</option>)}</select></label>
           <label>Рост<select defaultValue="175"><option value="170">170 см</option><option value="175">175 см</option><option value="182">182 см</option></select></label>
           <label>Вес<select defaultValue="74"><option value="68">68 кг</option><option value="74">74 кг</option><option value="80">80 кг</option></select></label>
-          <label>Прическа<select><option>Короткая</option><option>Кудри</option><option>Ирокез</option></select></label>
           <label>Форма лица<select><option>Овальная</option><option>Квадратная</option></select></label>
           <label>Цвет кожи<select><option>Смуглый</option><option>Светлый</option><option>Тёмный</option></select></label>
         </div>
+        <div className="appearance-select"><p className="section-label">ПРИЧЁСКА</p><HairPicker selected={hairStyle} onSelect={onHair} /></div>
       </section>
       <section className="career-team">
         <div><p className="section-label">ТВОЙ КЛУБ</p><h2>Выбери команду карьеры</h2></div>

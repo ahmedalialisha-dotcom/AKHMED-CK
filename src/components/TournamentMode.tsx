@@ -2,27 +2,30 @@ import { useMemo, useState } from "react";
 import { CLUB_TEAMS, NATIONAL_TEAMS, type FootballTeam } from "../lib/footballTeams";
 import Football3D from "./Football3D";
 import TeamPicker from "./TeamPicker";
+import HairPicker from "./HairPicker";
+import type { HairStyle } from "../lib/footballHair";
 import "../tournament-mode.css";
 
-type Props = { tournament: string; onExit: () => void };
+type Props = { tournament: string; hairStyle: HairStyle; onHair: (style: HairStyle) => void; onExit: () => void };
 type Stage = "groups" | "semifinal" | "final" | "champion" | "eliminated";
 type Result = { opponent: string; playerGoals: number; opponentGoals: number };
 
-export default function TournamentMode({ tournament, onExit }: Props) {
+export default function TournamentMode({ tournament, hairStyle, onHair, onExit }: Props) {
   const teams = tournament === "Чемпионат мира" ? NATIONAL_TEAMS : CLUB_TEAMS;
   const [selectedTeam, setSelectedTeam] = useState(teams[0].name);
   const [confirmed, setConfirmed] = useState(false);
-  if (confirmed) return <Competition tournament={tournament} selectedTeam={selectedTeam} teams={teams} onExit={onExit} />;
+  if (confirmed) return <Competition tournament={tournament} selectedTeam={selectedTeam} teams={teams} hairStyle={hairStyle} onExit={onExit} />;
   return (
     <main className="tournament-mode team-select">
       <header><button onClick={onExit}>← Главное меню</button><div><p>{tournament}</p><h1>Выбери {tournament === "Чемпионат мира" ? "сборную" : "клуб"}</h1></div><span>🏆</span></header>
       <TeamPicker teams={teams} selected={selectedTeam} onSelect={setSelectedTeam} />
+      <section className="appearance-select"><p>ПРИЧЁСКА ИГРОКА №11</p><HairPicker selected={hairStyle} onSelect={onHair} /></section>
       <button className="confirm-team" onClick={() => setConfirmed(true)}>Продолжить за {selectedTeam} →</button>
     </main>
   );
 }
 
-function Competition({ tournament, selectedTeam, teams, onExit }: Props & { selectedTeam: string; teams: FootballTeam[] }) {
+function Competition({ tournament, selectedTeam, teams, hairStyle, onExit }: Omit<Props, "onHair"> & { selectedTeam: string; teams: FootballTeam[] }) {
   const rivals = teams.filter((team) => team.name !== selectedTeam).map((team) => team.name);
   const opponents = rivals.slice(0, 3);
   const semifinalOpponent = rivals[3];
@@ -55,7 +58,7 @@ function Competition({ tournament, selectedTeam, teams, onExit }: Props & { sele
     setStage(ranking.findIndex(([team]) => team === selectedTeam) < 2 ? "semifinal" : "eliminated");
   };
   const restart = () => { setStage("groups"); setGroupRound(0); setPoints(createScores()); setGames(createScores()); setResults([]); setPlaying(false); };
-  if (playing) return <Football3D tournament={`${tournament} · ${selectedTeam} vs ${currentOpponent}`} homeTeam={selectedTeam} awayTeam={currentOpponent} onExit={() => setPlaying(false)} targetGoals={3} onMatchEnd={finishMatch} />;
+  if (playing) return <Football3D tournament={`${tournament} · ${selectedTeam} vs ${currentOpponent}`} homeTeam={selectedTeam} awayTeam={currentOpponent} hairStyle={hairStyle} onExit={() => setPlaying(false)} targetGoals={3} onMatchEnd={finishMatch} />;
 
   return (
     <main className="tournament-mode">

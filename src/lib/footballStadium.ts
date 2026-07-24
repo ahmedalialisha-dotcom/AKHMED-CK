@@ -2,6 +2,7 @@ import * as THREE from "three";
 import { FIELD_HALF_LENGTH, FIELD_HALF_WIDTH, FIELD_LENGTH, FIELD_WIDTH, GOAL_Z } from "./footballField";
 import { addFootballPitch } from "./footballPitch";
 import { addEndCrowds } from "./footballCrowd";
+import { createHair, hairForPlayer, type HairStyle } from "./footballHair";
 
 const createNumber = (value: string) => {
   const canvas = document.createElement("canvas");
@@ -29,6 +30,7 @@ export const createFootballer = (
   kind: "star" | "defender" | "keeper",
   number?: string,
   kitColors?: [string, string],
+  hairStyle?: HairStyle,
 ) => {
   const player = new THREE.Group();
   const colors =
@@ -54,11 +56,8 @@ export const createFootballer = (
   body.position.y = 1.35;
   const head = new THREE.Mesh(new THREE.SphereGeometry(0.31, 16, 16), skin);
   head.position.y = 2.25;
-  const hair = new THREE.Mesh(
-    new THREE.SphereGeometry(0.32, 14, 12, 0, Math.PI * 2, 0, Math.PI / 2),
-    new THREE.MeshStandardMaterial({ color: kind === "star" ? "#d8d2bc" : "#161515" }),
-  );
-  hair.position.y = 2.39;
+  const hairSeed = Number(number ?? (kind === "keeper" ? 1 : 7)) + (kind === "defender" ? 20 : 0);
+  const hair = createHair(hairStyle ?? hairForPlayer(hairSeed), hairSeed);
   player.add(body, head, hair);
   [-1, 1].forEach((side) => {
     const arm = new THREE.Mesh(

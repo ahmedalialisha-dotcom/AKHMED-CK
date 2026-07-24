@@ -1,6 +1,8 @@
 import { CLUB_TEAMS } from "../../lib/footballTeams";
 import TeamPicker from "../TeamPicker";
 import type { NavigateScreen } from "../MainMenu";
+import HairPicker from "../HairPicker";
+import type { HairStyle } from "../../lib/footballHair";
 
 type Props = {
   selectedTeam: string;
@@ -9,6 +11,8 @@ type Props = {
   onOpponent: (team: string) => void;
   onPenalty: (homeTeam: string, awayTeam: string) => void;
   onScreen: (screen: NavigateScreen) => void;
+  hairStyle: HairStyle;
+  onHair: (style: HairStyle) => void;
 };
 
 export default function PenaltyTeamScreen(props: Props) {
@@ -32,6 +36,7 @@ export default function PenaltyTeamScreen(props: Props) {
       <TeamPicker teams={CLUB_TEAMS} selected={props.selectedTeam} onSelect={props.onTeam} />
       <div className="opponent-select"><p className="section-label">СОПЕРНИК</p><h2>Кто встанет напротив?</h2></div>
       <TeamPicker teams={opponents} selected={opponent} onSelect={props.onOpponent} />
+      <section className="appearance-select"><p className="section-label">ПРИЧЁСКА БЬЮЩЕГО</p><HairPicker selected={props.hairStyle} onSelect={props.onHair} /></section>
       <button className="primary-action" onClick={() => props.onPenalty(props.selectedTeam, opponent)}>
         Начать пенальти <span>→</span>
       </button>

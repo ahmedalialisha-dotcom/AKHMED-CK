@@ -5,10 +5,11 @@ import { useDeviceMode } from "../hooks/useDeviceMode";
 import MobileControls from "./MobileControls";
 import FormationPreview from "./FormationPreview";
 import type { TrainingType } from "../lib/careerPlayer";
+import type { HairStyle } from "../lib/footballHair";
 import "../football3d.css";
 
-type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; playerAge?: number; trainingType?: TrainingType; onTrainingComplete?: () => void; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
-export default function Football3D({ onExit, tournament, homeTeam, awayTeam, playerAge, trainingType, onTrainingComplete, penalty = false, targetGoals, onMatchEnd }: Props) {
+type Props = { onExit: () => void; tournament: string; homeTeam?: string; awayTeam?: string; playerAge?: number; hairStyle?: HairStyle; trainingType?: TrainingType; onTrainingComplete?: () => void; penalty?: boolean; targetGoals?: number; onMatchEnd?: (won: boolean, playerGoals: number, opponentGoals: number) => void };
+export default function Football3D({ onExit, tournament, homeTeam, awayTeam, playerAge, hairStyle, trainingType, onTrainingComplete, penalty = false, targetGoals, onMatchEnd }: Props) {
   const mountRef = useRef<HTMLDivElement>(null);
   const [message, setMessage] = useState(
     "Веди мяч, не подпускай защитников и пробей мимо вратаря.",
@@ -109,7 +110,7 @@ export default function Football3D({ onExit, tournament, homeTeam, awayTeam, pla
     [onGoal, onMiss, onTackle, onOpponentDribble, onBallWon, onOpponentPass, onPrematch, onConcede, onAttempt, onOpponentPenalty, onTrainingAction],
   );
 
-  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge, trainingType);
+  useFootballScene(mountRef, sceneEvents, penalty, !penalty || shootout.turn === "player", shootout.roundKey, homeTeam, awayTeam, shootout.opponentShotKey, playerAge, trainingType, hairStyle);
 
   const shownMessage = penalty ? shootout.message : message;
   const shownGoals = penalty ? shootout.playerGoals : goals;

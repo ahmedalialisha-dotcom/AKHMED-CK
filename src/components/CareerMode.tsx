@@ -3,11 +3,13 @@ import { CLUB_TEAMS } from "../lib/footballTeams";
 import Football3D from "./Football3D";
 import { getCareerStats } from "../lib/careerPlayer";
 import type { TrainingType } from "../lib/careerPlayer";
+import type { HairStyle } from "../lib/footballHair";
 import "../career-mode.css";
 
 type Props = {
   player: string;
   playerAge: number;
+  hairStyle: HairStyle;
   team: string;
   onExit: () => void;
 };
@@ -18,7 +20,7 @@ const drills = [
   { icon: "⚡", title: "Скорость", text: "Ускоряйся 5 секунд", type: "sprint" as TrainingType },
 ];
 
-export default function CareerMode({ player, playerAge, team, onExit }: Props) {
+export default function CareerMode({ player, playerAge, hairStyle, team, onExit }: Props) {
   const fixtures = useMemo(() => CLUB_TEAMS.filter((item) => item.name !== team).slice(0, 8), [team]);
   const [matchIndex, setMatchIndex] = useState(0);
   const [completedDrills, setCompletedDrills] = useState<string[]>([]);
@@ -43,10 +45,10 @@ export default function CareerMode({ player, playerAge, team, onExit }: Props) {
       setCompletedDrills((current) => [...current, activeDrill]);
       setActiveDrill(undefined);
     };
-    return <Football3D tournament={`Тренировка · ${activeDrill}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} trainingType={selectedDrill.type} onTrainingComplete={finishTraining} onExit={() => setActiveDrill(undefined)} />;
+    return <Football3D tournament={`Тренировка · ${activeDrill}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} hairStyle={hairStyle} trainingType={selectedDrill.type} onTrainingComplete={finishTraining} onExit={() => setActiveDrill(undefined)} />;
   }
   if (playing) {
-    return <Football3D tournament={`Карьера · Тур ${matchIndex + 1} · ${team} vs ${opponent}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} targetGoals={3} onMatchEnd={finishMatch} onExit={() => setPlaying(false)} />;
+    return <Football3D tournament={`Карьера · Тур ${matchIndex + 1} · ${team} vs ${opponent}`} homeTeam={team} awayTeam={opponent} playerAge={playerAge} hairStyle={hairStyle} targetGoals={3} onMatchEnd={finishMatch} onExit={() => setPlaying(false)} />;
   }
 
   return (

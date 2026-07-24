@@ -7,6 +7,7 @@ import { coverPosition, moveToPosition, opponentAttackPosition, opponentDefenseP
 import { findTeam } from "../lib/footballTeams";
 import { getCareerStats } from "../lib/careerPlayer";
 import type { TrainingType } from "../lib/careerPlayer";
+import type { HairStyle } from "../lib/footballHair";
 
 type SceneEvents = {
   onGoal: () => void;
@@ -35,6 +36,7 @@ export function useFootballScene(
   opponentShotKey = 0,
   playerAge?: number,
   trainingType?: TrainingType,
+  hairStyle?: HairStyle,
 ) {
   const canShootRef = useRef(canShoot);
   const opponentShotKeyRef = useRef(opponentShotKey);
@@ -61,7 +63,7 @@ export function useFootballScene(
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     mount.appendChild(renderer.domElement);
-    const player = createFootballer("star", "11", homeColors);
+    const player = createFootballer("star", "11", homeColors, hairStyle);
     player.position.set(0, 0.1, penalty ? PENALTY_START_Z : PLAYER_START_Z);
     scene.add(player);
     const teammates = penalty ? [] : TEAM_FORMATION.map(([x, z], index) => {
@@ -661,5 +663,5 @@ export function useFootballScene(
       renderer.dispose();
       renderer.domElement.remove();
     };
-  }, [awayTeam, events, homeTeam, mountRef, penalty, playerAge, resetKey, trainingType]);
+  }, [awayTeam, events, hairStyle, homeTeam, mountRef, penalty, playerAge, resetKey, trainingType]);
 }

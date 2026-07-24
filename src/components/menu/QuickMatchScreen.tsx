@@ -1,6 +1,8 @@
 import { CLUB_TEAMS } from "../../lib/footballTeams";
 import TeamPicker from "../TeamPicker";
 import type { NavigateScreen } from "../MainMenu";
+import HairPicker from "../HairPicker";
+import type { HairStyle } from "../../lib/footballHair";
 
 type Props = {
   selectedTeam: string;
@@ -9,9 +11,11 @@ type Props = {
   onOpponent: (team: string) => void;
   onStart: (mode: string, homeTeam?: string, awayTeam?: string) => void;
   onScreen: (screen: NavigateScreen) => void;
+  hairStyle: HairStyle;
+  onHair: (style: HairStyle) => void;
 };
 
-export default function QuickMatchScreen({ selectedTeam, opponentTeam, onTeam, onOpponent, onStart, onScreen }: Props) {
+export default function QuickMatchScreen({ selectedTeam, opponentTeam, hairStyle, onTeam, onOpponent, onHair, onStart, onScreen }: Props) {
   const opponents = CLUB_TEAMS.filter((team) => team.name !== selectedTeam);
   const safeOpponent = opponents.some((team) => team.name === opponentTeam) ? opponentTeam : opponents[0].name;
   return (
@@ -28,6 +32,7 @@ export default function QuickMatchScreen({ selectedTeam, opponentTeam, onTeam, o
       <TeamPicker teams={CLUB_TEAMS} selected={selectedTeam} onSelect={onTeam} />
       <section className="opponent-select"><p className="section-label">СОПЕРНИК</p><h2>Выбери команду соперника</h2></section>
       <TeamPicker teams={opponents} selected={safeOpponent} onSelect={onOpponent} />
+      <section className="appearance-select"><p className="section-label">ПРИЧЁСКА ИГРОКА №11</p><h2>Выбери внешний вид</h2><HairPicker selected={hairStyle} onSelect={onHair} /></section>
       <button className="primary-action" onClick={() => onStart(`Быстрый матч · ${selectedTeam} vs ${safeOpponent}`, selectedTeam, safeOpponent)}>
         {selectedTeam} vs {safeOpponent} <span>→</span>
       </button>
